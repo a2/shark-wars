@@ -27,13 +27,20 @@ function _update()
     obj:update()
   end
 
+  --increment frame
   frame=increment_counter(frame)
   if (frame>=60 and frame%60==0) make_fish_offscreen()
+
+  --filter out "dead" objects
+  filter_out_finished(game_objects)
 end
 
 function _draw()
   --clear the screen
   cls(1)
+
+  --print game_objects count
+  --print("count: "..#game_objects,7)
 
   palt(0,false)--black is in
   palt(1,true) --dark blue is out
@@ -171,7 +178,7 @@ function make_fish(x,y,flipped)
       self.counter=increment_counter(self.counter)
       self.y+=sin(self.counter/60+self.phase)/4
       self.x+=ternary(self.flipped,-fish_dx,fish_dx)
-      if (self.x+self.width<0 or self.x>128) del(game_objects,self)
+      if (self.x+self.width<0 or self.x>128) self.finished=true
     end,
     draw=function(self)
       spr(self.sprite,self.x,self.y,1,1,self.flipped)
@@ -194,7 +201,7 @@ function make_bubble(x,y)
       self.counter=increment_counter(self.counter)
       self.x+=sin(self.counter/15+self.phase)/10
       self.y+=bubble_dy
-      if (self.y<0) del(game_objects,self)
+      if (self.y<0) self.finished=true
     end,
     draw=function(self)
       pset(self.x,self.y,7)
@@ -223,6 +230,15 @@ end
 --decrement a counter but not below 0
 function decrement_counter(n)
   return max(0,n-1)
+end
+
+function filter_out_finished(list)
+  local item
+  for item in all(list) do
+    if item.finished then
+      del(list,item)
+    end
+  end
 end
 __gfx__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
