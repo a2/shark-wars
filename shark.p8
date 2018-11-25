@@ -106,6 +106,9 @@ function make_shark(x,y)
     chomp=0,--chomp state
     tick=0,--tick/tock
     frame=0,--sprite frame
+    mouth=function(self)
+      return self.x+ternary(self.flipped,3,self.width-3),self.y+11
+    end,
     update=function(self)
       --move
       if btn(0) then
@@ -127,9 +130,8 @@ function make_shark(x,y)
       if (self.frame==0 and self.chomp==1) self.chomp=2
       if self.frame==7 and self.chomp==2 then
         --bubbles
-        local cx=self.x+ternary(self.flipped,3,self.width-3)
-        local cy=self.y+11
-        make_bubbles(3,cx,cy)
+        local mx,my=self:mouth()
+        make_bubbles(3,mx,my)
         self.chomp=0
         sfx(0)
       end
@@ -177,9 +179,9 @@ function make_fish(x,y,flipped)
   })
 end
 
-function make_bubbles(count,shark_x,shark_y)
+function make_bubbles(count,mouth_x,mouth_y)
   for i=1,count do
-    make_bubble(shark_x+rndb(-3,3),shark_y+rndb(-3,3))
+    make_bubble(mouth_x+rndb(-3,3),mouth_y+rndb(-3,3))
   end
 end
 
