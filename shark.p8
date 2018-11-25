@@ -59,7 +59,7 @@ function make_game_object(name,x,y,props)
       --don't draw anything
     end,
     draw_bounding_box=function(self,color)
-      rect(self.x,self.y.self.x+self.width,self.y+self.height,color)
+      rect(self.x,self.y,self.x+self.width,self.y+self.height,color)
     end,
     center=function(self)
       return self.x+self.width/2,self.y+self.height/2
