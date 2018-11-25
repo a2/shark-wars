@@ -163,13 +163,13 @@ function make_fish(x,y,flipped)
   return make_game_object("fish",x,y,{
     width=8,
     height=8,
-    dy=rnd(1),
+    phase=rnd(1),
     flipped=flipped,
     sprite=rndb(96,99),
     counter=0,
     update=function(self)
       self.counter=increment_counter(self.counter)
-      self.y+=sin(self.counter/60+self.dy)/4
+      self.y+=sin(self.counter/60+self.phase)/4
       self.x+=ternary(self.flipped,-fish_dx,fish_dx)
       if (self.x+self.width<0 or self.x>128) del(game_objects,self)
     end,
@@ -188,11 +188,11 @@ end
 function make_bubble(x,y)
   local bubble_dy=-2
   return make_game_object("bubble",x,y,{
-    dy=rnd(1),
+    phase=rnd(1),
     counter=0,
     update=function(self)
       self.counter=increment_counter(self.counter)
-      self.x+=sin(self.counter/15+self.dy)/10
+      self.x+=sin(self.counter/15+self.phase)/10
       self.y+=bubble_dy
       if (self.y<0) del(game_objects,self)
     end,
