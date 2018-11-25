@@ -27,7 +27,7 @@ function _update()
     obj:update()
   end
 
-  frame+=1
+  frame=increment_counter(frame)
   if (frame>=60 and frame%60==0) make_fish_offscreen()
 end
 
@@ -168,7 +168,7 @@ function make_fish(x,y,flipped)
     sprite=rndb(96,99),
     counter=0,
     update=function(self)
-      self.counter+=1
+      self.counter=increment_counter(self.counter)
       self.y+=sin(self.counter/60+self.dy)/4
       self.x+=ternary(self.flipped,-fish_dx,fish_dx)
       if (self.x+self.width<0 or self.x>128) del(game_objects,self)
@@ -191,7 +191,7 @@ function make_bubble(x,y)
     dy=rnd(1),
     counter=0,
     update=function(self)
-      self.counter+=1
+      self.counter=increment_counter(self.counter)
       self.x+=sin(self.counter/15+self.dy)/10
       self.y+=bubble_dy
       if (self.y<0) del(game_objects,self)
@@ -213,6 +213,16 @@ end
 
 function array_draw(array)
   foreach(array,function(e) e:draw() end)
+end
+
+--increment a counter, wrapping to 20000 if it risks overflowing
+function increment_counter(n)
+  return n+ternary(n>32000,-12000,1)
+end
+
+--decrement a counter but not below 0
+function decrement_counter(n)
+  return max(0,n-1)
 end
 __gfx__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
