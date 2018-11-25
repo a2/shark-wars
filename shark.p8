@@ -3,142 +3,201 @@ version 16
 __lua__
 -- shark
 -- by a2
-tick=0
-fish_dx=0.5
-bubble_dy=-2
+local score
+local game_objects
+local frame
 
 function _init()
-  make_shark()
-  make_fishes()
-  make_bubbles()
+  --set initial frame counter to 0
+  frame=0
+  --start score counter at zero
+  score=0
+  --create the game objects
+  game_objects={}
+  --create the shark
+  make_shark(48,56)
+  --start the music
   music(0)
 end
 
 function _update()
-  shark:update()
-  fishes:update()
-  bubbles:update()
-  tick+=1
+  --update all game objects
+  local obj
+  for obj in all(game_objects) do
+    obj:update()
+  end
+
+  frame+=1
+  if (frame>=60 and frame%60==0) make_fish_offscreen()
 end
 
 function _draw()
+  --clear the screen
   cls(1)
 
   palt(0,false)--black is in
   palt(1,true) --dark blue is out
 
-  shark:draw()
-  fishes:draw()
-  bubbles:draw()
+  local obj
+  for obj in all(game_objects) do
+    obj:draw()
+  end
 end
 -->8
 --makers
-function make_shark()
-  shark={}
-  shark.width=32
-  shark.height=16
-  shark.x=(128-shark.width)/2
-  shark.y=(128-shark.height)/2
-  shark.flipped=false
-  shark.chomp=0
-  shark.hp=100
-
-  shark.draw=function(self)
-    local sx=flr(tick/2)%8*16
-    local sy=ternary(self.chomp==2,16,0)
-
-    local dx1,dx2--dx1 for head, dx2 for butt
-    if self.flipped then
-      dx2,dx1=self.x,self.x+16
-    else
-      dx1,dx2=self.x,self.x+16
+function make_game_object(name,x,y,props)
+  local obj={
+    name=name,
+    x=x,
+    y=y,
+    velocity_x=0,
+    velocity_y=0,
+    update=function(self)
+      --do nothing
+    end,
+    draw=function(self)
+      --don't draw anything
+    end,
+    draw_bounding_box=function(self,color)
+      rect(self.x,self.y.self.x+self.width,self.y+self.height,color)
+    end,
+    center=function(self)
+      return self.x+self.width/2,self.y+self.height/2
+    end,
+    check_for_hit=function(self,other)
+      return bounding_boxes_overlapping(self,other)
     end
-
-    sspr(sx,32,16,16,dx1,self.y,16,16,self.flipped,false)
-    sspr(sx,sy,16,16,dx2,self.y,16,16,self.flipped,false)
+  }
+  --add additional properties
+  local key,value
+  for key,value in pairs(props) do
+    obj[key]=value
   end
+  --add it to the list of game objects
+  add(game_objects,obj)
+  --return the game object
+  return obj
+end
 
-  shark.update=function(self)
-    --move
-    if btn(0) then
-      self.x=max(0,self.x-1)
-      self.flipped=true
-    elseif btn(1) then
-      self.x=min(128-self.width,self.x+1)
-      self.flipped=false
-    end
+--hit detection helper functions
+function rects_overlapping(left1,top1,right1,bottom1,left2,top2,right2,bottom2)
+  return right1>left2 and right2>left1 and bottom1>top2 and bottom2>top1
+end
 
-    if (btn(2)) self.y=max(0,self.y-1)
-    if (btn(3)) self.y=min(128-self.height,self.y+1)
+function bounding_boxes_overlapping(obj1,obj2)
+  return rects_overlapping(obj1.x,obj1.y,obj1.x+obj1.width,obj1.y+obj1.height,obj2.x,obj2.y,obj2.x+obj2.width,obj2.y+obj2.height)
+end
 
-    --update
-    local f=flr(tick/2)%8
-    if (self.chomp==0 and btn(4)) self.chomp=1
-    if (f==0 and self.chomp==1) self.chomp=2
-    if f==7 and self.chomp==2 then
-      --bubbles
-      bubbles:spawn()
-      self.chomp=0
-      sfx(0)
+function for_each_game_object(name,callback)
+  local obj
+  for obj in all(game_objects) do
+    if obj.name==name then
+      callback(obj)
     end
   end
 end
 
-function make_fishes()
-  function make_fish()
-    local fish={}
-    fish.y=rndb(24,104)
-    fish.dy=rnd(1)
-    fish.width=8
-    fish.height=8
-    fish.flipped=rnd(1)>0.5
-    fish.sprite=rndb(96,99)
-    fish.x=ternary(fish.flipped,128,-fish.width)
-    fish.draw=function(self)
+function make_shark(x,y)
+  return make_game_object("shark",x,y,{
+    width=32,
+    height=16,
+    flipped=false,
+    hp=100,--health
+    chomp=0,--chomp state
+    tick=0,--tick/tock
+    frame=0,--sprite frame
+    update=function(self)
+      --move
+      if btn(0) then
+        self.x=max(0,self.x-1)
+        self.flipped=true
+      elseif btn(1) then
+        self.x=min(128-self.width,self.x+1)
+        self.flipped=false
+      end
+      if (btn(2)) self.y=max(0,self.y-1)
+      if (btn(3)) self.y=min(128-self.height,self.y+1)
+
+      --update
+      self.tick=(self.tick+1)%2
+      if (self.tick==0) self.frame=(self.frame+1)%8
+
+      --chomp
+      if (self.chomp==0 and btn(4)) self.chomp=1
+      if (self.frame==0 and self.chomp==1) self.chomp=2
+      if self.frame==7 and self.chomp==2 then
+        --bubbles
+        local cx=self.x+ternary(self.flipped,3,self.width-3)
+        local cy=self.y+11
+        make_bubbles(3,cx,cy)
+        self.chomp=0
+        sfx(0)
+      end
+    end,
+    draw=function(self)
+      local sx=self.frame*16
+      local sy=ternary(self.chomp==2,16,0)
+  
+      local dx1,dx2--dx1 for head, dx2 for butt
+      if self.flipped then
+        dx2,dx1=self.x,self.x+16
+      else
+        dx1,dx2=self.x,self.x+16
+      end
+  
+      sspr(sx,32,16,16,dx1,self.y,16,16,self.flipped,false)
+      sspr(sx,sy,16,16,dx2,self.y,16,16,self.flipped,false)  
+    end,
+  })
+end
+
+function make_fish_offscreen()
+  local flipped=rnd(1)>0.5
+  return make_fish(ternary(flipped,128,-8),rndb(24,104),flipped)
+end
+
+function make_fish(x,y,flipped)
+  local fish_dx=0.5
+  return make_game_object("fish",x,y,{
+    width=8,
+    height=8,
+    dy=rnd(1),
+    flipped=flipped,
+    sprite=rndb(96,99),
+    counter=0,
+    update=function(self)
+      self.counter+=1
+      self.y+=sin(self.counter/60+self.dy)/4
+      self.x+=ternary(self.flipped,-fish_dx,fish_dx)
+      if (self.x+self.width<0 or self.x>128) del(game_objects,self)
+    end,
+    draw=function(self)
       spr(self.sprite,self.x,self.y,1,1,self.flipped)
     end
-    return fish
-  end
+  })
+end
 
-  fishes={}
-  fishes.draw=array_draw
-  fishes.update=function(self)
-    for fish in all(self) do
-      fish.y+=sin(tick/60+fish.dy)/4
-      fish.x+=ternary(fish.flipped,-fish_dx,fish_dx)
-      if (fish.x+fish.width<0 or fish.x>128) del(self,fish)
-    end
-
-    if (tick>=60 and tick%60==0) fishes:spawn()
-  end
-  fishes.spawn=function(self)
-    add(self,make_fish())
+function make_bubbles(count,shark_x,shark_y)
+  for i=1,count do
+    make_bubble(shark_x+rndb(-3,3),shark_y+rndb(-3,3))
   end
 end
 
-function make_bubbles()
-  function make_bubble()
-    local bubble={}
-    bubble.x=shark.x+ternary(shark.flipped,3,shark.width-3)
-    bubble.x+=rndb(-3,3)
-    bubble.y=shark.y+11+rndb(-3,3)
-    bubble.dx=rnd(1)
-    bubble.draw=function(self) pset(self.x,self.y,7) end
-    return bubble
-  end
-
-  bubbles={}
-  bubbles.draw=array_draw
-  bubbles.update=function(self)
-    for bubble in all(self) do
-      bubble.x+=sin(tick/60+bubble.dx)/10
-      bubble.y+=bubble_dy
-      if (bubble.y<0) del(self,bubble)
+function make_bubble(x,y)
+  local bubble_dy=-2
+  return make_game_object("bubble",x,y,{
+    dy=rnd(1),
+    counter=0,
+    update=function(self)
+      self.counter+=1
+      self.x+=sin(self.counter/15+self.dy)/10
+      self.y+=bubble_dy
+      if (self.y<0) del(game_objects,self)
+    end,
+    draw=function(self)
+      pset(self.x,self.y,7)
     end
-  end
-  bubbles.spawn=function(self)
-    for i=1,3 do add(self,make_bubble()) end
-  end
+  })
 end
 -->8
 --helpers
