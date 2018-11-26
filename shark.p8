@@ -218,10 +218,6 @@ function ternary(condition,if_true,if_false)
   return condition and if_true or if_false
 end
 
-function array_draw(array)
-  foreach(array,function(e) e:draw() end)
-end
-
 --increment a counter, wrapping to 20000 if it risks overflowing
 function increment_counter(n)
   return n+ternary(n>32000,-12000,1)
