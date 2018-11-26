@@ -199,7 +199,7 @@ function make_bubble(x,y)
     counter=0,
     update=function(self)
       self.counter=increment_counter(self.counter)
-      self.x+=sin(self.counter/15+self.phase)/10
+      self.x+=sin(self.counter/15+self.phase)/2
       self.y+=bubble_dy
       if (self.y<0) self.finished=true
     end,
