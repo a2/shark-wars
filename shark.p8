@@ -116,15 +116,16 @@ function make_shark(x,y)
     end,
     update=function(self)
       --move
-      if btn(0) then
-        self.x=max(0,self.x-1)
+      if btn(0) and self.x>0 then
+        self.x-=1
         self.flipped=true
-      elseif btn(1) then
-        self.x=min(128-self.width,self.x+1)
+      end
+      if btn(1) and self.x+self.width<128 then
+        self.x+=1
         self.flipped=false
       end
-      if (btn(2)) self.y=max(0,self.y-1)
-      if (btn(3)) self.y=min(128-self.height,self.y+1)
+      if (btn(2) and self.y>0) self.y-=1
+      if (btn(3) and self.y+self.height<128) self.y+=1
 
       --update
       self.tick+=1
