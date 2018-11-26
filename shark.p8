@@ -129,8 +129,11 @@ function make_shark(x,y)
       if (btn(3)) self.y=min(128-self.height,self.y+1)
 
       --update
-      self.tick=(self.tick+1)%2
-      if (self.tick==0) self.frame=(self.frame+1)%8
+      self.tick+=1
+      if self.tick==2 then
+        self.frame=(self.frame+1)%8
+        self.tick=0
+      end
 
       --chomp
       if (self.chomp==0 and btn(4)) self.chomp=1
@@ -144,16 +147,14 @@ function make_shark(x,y)
       end
     end,
     draw=function(self)
+      --spritesheet x,y
       local sx=self.frame*16
       local sy=ternary(self.chomp==2,16,0)
   
-      local dx1,dx2--dx1 for head, dx2 for butt
-      if self.flipped then
-        dx2,dx1=self.x,self.x+16
-      else
-        dx1,dx2=self.x,self.x+16
-      end
-  
+      --draw x1 for head, draw x2 for butt
+      local dx1=ternary(self.flipped,self.x+16,self.x)
+      local dx2=ternary(self.flipped,self.x,self.x+16)
+
       sspr(sx,32,16,16,dx1,self.y,16,16,self.flipped,false)
       sspr(sx,sy,16,16,dx2,self.y,16,16,self.flipped,false)  
     end,
