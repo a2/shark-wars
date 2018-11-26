@@ -57,8 +57,6 @@ function make_game_object(name,x,y,props)
     name=name,
     x=x,
     y=y,
-    velocity_x=0,
-    velocity_y=0,
     update=function(self)
       --do nothing
     end,
