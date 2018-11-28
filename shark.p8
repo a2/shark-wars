@@ -45,7 +45,7 @@ function _update()
 end
 
 function _draw()
-  pat={
+  patterns={
     0b1111111111111111,
     0b0111111111111111,
     0b0111111111011111,
@@ -65,7 +65,7 @@ function _draw()
   }
   
   --clear the screen
-  fillp(pat[mid(1,depth,#pat)])
+  fillp(patterns[mid(1,depth,#patterns)])
   rectfill(0,0,128,128,0x10)
   fillp()
 
