@@ -133,7 +133,6 @@ function make_shark(x,y)
     width=32,
     height=16,
     flipped=false,
-    hp=100,--health
     chomp=0,--chomp state
     tick=0,--tick/tock
     frame=0,--sprite frame
