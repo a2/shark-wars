@@ -4,22 +4,36 @@ __lua__
 -- shark
 -- by a2
 local score
+local depth
+local depth_counter
 local game_objects
 
 function _init()
   --start score counter at zero
   score=0
+  --start depth at 1, counter at zero
+  depth=1
+  depth_counter=0
   --create the game objects
   game_objects={}
   --create initial objects
   make_shark(48,56)
-  make_treasure(60,120)
+  --make_treasure(60,120)
   make_fish_generator()
   --start the music
   music(0)
 end
 
 function _update()
+  depth_counter+=1
+  if depth_counter==2.5*30 then
+    depth+=1
+    depth_counter=0
+  end
+  if depth>=16 then
+    --game over
+  end
+
   --update all game objects
   local obj
   for obj in all(game_objects) do
@@ -31,37 +45,57 @@ function _update()
 end
 
 function _draw()
+  pat={
+    0b1111111111111111,
+    0b0111111111111111,
+    0b0111111111011111,
+    0b0101111111011111,
+    0b0101111101011111,
+    0b0101101101011111,
+    0b0101101101011110,
+    0b0101101001011110,
+    0b0101101001011010,
+    0b0001101001011010,
+    0b0001101001001010,
+    0b0000101001001010,
+    0b0000101000001010,
+    0b0000001000001010,
+    0b0000001000001000,
+    0b0000000000000000,
+  }
+  
   --clear the screen
-  cls(1)
-
-  --print game_objects count
-  --print("count: "..#game_objects,7)
+  fillp(pat[mid(1,depth,#pat)])
+  rectfill(0,0,128,128,0x10)
+  fillp()
 
   local obj
   for obj in all(game_objects) do
-    obj:draw()
+    if (obj.visible) obj:draw()
   end
+
+  print("score:"..score,1,1,7)
 end
 -->8
 --makers
+function noop()
+end
+
 function make_game_object(name,x,y,props)
   local obj={
     name=name,
     x=x,
     y=y,
-    update=function(self)
-      --do nothing
-    end,
-    draw=function(self)
-      --don't draw anything
-    end,
+    visible=true,
+    update=noop,
+    draw=noop,
     draw_bounding_box=function(self,color)
       rect(self.x,self.y,self.x+self.width,self.y+self.height,color)
     end,
     center=function(self)
       return self.x+self.width/2,self.y+self.height/2
     end,
-    check_for_hit=function(self,other)
+    overlaps=function(self,other)
       return bounding_boxes_overlapping(self,other)
     end
   }
@@ -128,13 +162,21 @@ function make_shark(x,y)
 
       --chomp
       if (self.chomp==0 and btn(4)) self.chomp=1
-      if (self.frame==0 and self.chomp==1) self.chomp=2
-      if self.frame==7 and self.chomp==2 then
+      if (self.chomp==1 and self.frame==0) self.chomp=2
+      if self.chomp==2 and self.frame==7 then
         --bubbles
         local mx,my=self:mouth()
         make_bubbles(3,mx,my)
         self.chomp=0
         sfx(0)
+
+        mouth={x=mx-2,y=my-2,width=4,height=4}
+        for_each_game_object("fish",function(fish)
+          if bounding_boxes_overlapping(mouth,fish) then
+            fish.finished=true
+            score+=1
+          end
+        end)
       end
     end,
     draw=function(self)
@@ -146,8 +188,8 @@ function make_shark(x,y)
       local dx1=ternary(self.flipped,self.x+16,self.x)
       local dx2=ternary(self.flipped,self.x,self.x+16)
 
-      palt(0,0)
-      palt(1,1)
+      palt(0,false)
+      palt(1,true)
       sspr(sx,32,16,16,dx1,self.y,16,16,self.flipped,false)
       sspr(sx,sy,16,16,dx2,self.y,16,16,self.flipped,false)
       palt()
@@ -157,8 +199,8 @@ end
 
 function make_treasure(x,y)
   return make_game_object("treasure",x,y,{
-    width=16,
-    height=16,
+    width=8,
+    height=8,
     draw=function(self)
       spr(100,self.x,self.y)
     end
@@ -181,8 +223,8 @@ end
 function make_fish(x,y,flipped)
   local fish_dx=0.5
   return make_game_object("fish",x,y,{
-    width=8,
-    height=8,
+    width=7,
+    height=4,
     phase=rnd(1),
     flipped=flipped,
     sprite=rndb(96,99),
@@ -301,12 +343,12 @@ __gfx__
 11111111111111661111111111111661111111111111116611661111111111111116611111111111111661111111111111166111111111161111111111111166
 11111111111111611111111111111611111111111111116111111111111111111111111111111111111661111111111111111111111111161111111111111166
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-11111111111111111111111111111111000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-111111111111111111111111111111110aaaa9900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-1f144f91161dd6c1161336b1161dd6e1aee888890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-19f9f9091c6c6c0c1b6b6b0b1e6e6e0eae8888890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-19f9f9991c6c6ccc1b6b6bbb1e6e6eeeaaadd9990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-1f144f91161dd6c1161336b1161dd6e1a88128890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+f144f91161dd6c1161336b1161dd6e11000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+9f9f9091c6c6c0c1b6b6b0b1e6e6e0e10aaaa9900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+9f9f9991c6c6ccc1b6b6bbb1e6e6eee1aee888890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+f144f91161dd6c1161336b1161dd6e11ae8888890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+11111111111111111111111111111111aaadd9990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+11111111111111111111111111111111a88128890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 11111111111111111111111111111111988888890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 11111111111111111111111111111111999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __label__
