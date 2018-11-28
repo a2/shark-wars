@@ -5,11 +5,8 @@ __lua__
 -- by a2
 local score
 local game_objects
-local frame
 
 function _init()
-  --set initial frame counter to 0
-  frame=0
   --start score counter at zero
   score=0
   --create the game objects
@@ -17,6 +14,7 @@ function _init()
   --create initial objects
   make_shark(48,56)
   make_treasure(60,120)
+  make_fish_generator()
   --start the music
   music(0)
 end
@@ -27,10 +25,6 @@ function _update()
   for obj in all(game_objects) do
     obj:update()
   end
-
-  --increment frame
-  frame=increment_counter(frame)
-  if (frame>=60 and frame%60==0) make_fish_offscreen()
 
   --filter out "dead" objects
   filter_out_finished(game_objects)
@@ -171,9 +165,17 @@ function make_treasure(x,y)
   })
 end
 
-function make_fish_offscreen()
-  local flipped=rnd(1)>0.5
-  return make_fish(ternary(flipped,128,-8),rndb(24,104),flipped)
+function make_fish_generator()
+  return make_game_object("fish_generator",-1,-1,{
+    frame=0,
+    update=function(self)
+      self.frame=increment_counter(self.frame)
+      if self.frame>=60 and self.frame%60==0 then
+        local flipped=rnd(1)>0.5
+        make_fish(ternary(flipped,128,-8),rndb(24,104),flipped)
+      end
+    end
+  })
 end
 
 function make_fish(x,y,flipped)
