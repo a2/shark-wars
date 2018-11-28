@@ -4,20 +4,16 @@ __lua__
 -- shark
 -- by a2
 local score
-local depth
-local depth_counter
 local game_objects
+local shark
 
 function _init()
   --start score counter at zero
   score=0
-  --start depth at 1, counter at zero
-  depth=1
-  depth_counter=0
   --create the game objects
   game_objects={}
   --create initial objects
-  make_shark(48,56)
+  shark=make_shark(48,0)
   --make_treasure(60,120)
   make_fish_generator()
   --start the music
@@ -25,15 +21,6 @@ function _init()
 end
 
 function _update()
-  depth_counter+=1
-  if depth_counter==2.5*30 then
-    depth+=1
-    depth_counter=0
-  end
-  if depth>=16 then
-    --game over
-  end
-
   --update all game objects
   local obj
   for obj in all(game_objects) do
@@ -65,7 +52,7 @@ function _draw()
   }
   
   --clear the screen
-  fillp(patterns[mid(1,depth,#patterns)])
+  fillp(patterns[flr(shark.y*16/114)+1])
   rectfill(0,0,128,128,0x10)
   fillp()
 
