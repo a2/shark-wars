@@ -50,7 +50,7 @@ function _draw()
     0b0000001000001000,
     0b0000000000000000,
   }
-  
+
   --clear the screen
   fillp(patterns[flr(shark.y*16/114)+1])
   rectfill(0,0,128,128,0x10)
