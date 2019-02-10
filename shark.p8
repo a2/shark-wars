@@ -82,8 +82,9 @@ function cprint(clr,text)
   print(text)
 end
 
-function intro_init()
-  mode.messages={
+function intro_init(self)
+  self.message=1
+  self.messages={
     function(h,d)
       cprint(h,"[nasa says]")
       cprint(d,"we have received a message\nfrom the aliens on enceladus,\nthe moon of saturn.")
@@ -135,7 +136,6 @@ function intro_init()
       cprint(h,"press 🅾️ to start")
     end
   }
-  mode.message=1
 end
 
 function intro_update()
@@ -150,25 +150,25 @@ function intro_update()
   end
 end
 
-function intro_draw()
+function intro_draw(self)
   cursor(0,0)
   local h=5--header
   local d=5--dialog
 
   local m
-  for m=1,mode.message do
-    if m>=mode.message then
+  for m=1,self.message do
+    if m>=self.message then
       h=10
       d=7
     end
-    mode.messages[m](h,d)
+    self.messages[m](h,d)
   end
 end
 -->8
 --game loop
-function game_init()
+function game_init(self)
   --start score counter at zero
-  mode.score=0
+  self.score=0
 
   --create initial objects
   make_starfield_generator(5,0.05)--1/20, dk gray
@@ -177,12 +177,12 @@ function game_init()
   make_shark(8,60)
 end
 
-function game_update()
+function game_update(self)
 end
 
-function game_draw()
+function game_draw(self)
   rectfill(0,0,128,6,5)
-  print("score:"..mode.score,1,1,7)
+  print("score:"..self.score,1,1,7)
   print("fps:"..stat(7),104,1,7)
 end
 -->8
