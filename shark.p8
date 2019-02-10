@@ -173,6 +173,9 @@ function game_init(mode)
   --start score counter at zero
   mode.score=0
 
+  --store current time
+  mode.start=time()
+
   --create initial objects
   make_starfield_generator(5,0.05)--1/20, dk gray
   make_starfield_generator(6,0.25)--1/4, lt gray
@@ -186,6 +189,7 @@ end
 function game_draw(mode)
   rectfill(0,0,128,6,5)
   print("score:"..mode.score,1,1,7)
+  --print("t:"..flr(time()-mode.start),1,1,7)
   --print("fps:"..stat(7),104,1,7)
 end
 -->8
