@@ -1,36 +1,59 @@
 pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
--- shark
--- by a2
-local score
-local game_objects
-local shark
+--shark
+--by a2
+
+function _init()
+  add_mode("boot",noop,default_update,default_draw)
+  add_mode("game",game_init,game_update,game_draw)
+  set_mode("boot")
+end
+
+function _update()
+  mode.update()
+end
+
+function _draw()
+  mode.draw()
+end
 
 --valid layer indices
 --update here to use a new z-value
 game_layers={-1,0,1}
+-->8
+--modes
+function add_mode(name,init,update,draw,props)
+  local new_mode
+  new_mode={
+    name=name,
+    init=init,
+    update=update,
+    draw=draw
+  }
 
-function _init()
-  --start score counter at zero
-  score=0
-
-  --create the game objects
-  game_layers={-1,0,1}
+  --game objects
+  local game_objects,layer
   game_objects={}
-  local layer
   for layer in all(game_layers) do
-    game_objects[layer]= {}
+    game_objects[layer]={}
   end
 
-  --create initial objects
-  make_starfield_generator(5,0.05)--1/20, dk gray
-  make_starfield_generator(6,0.25)--1/4, lt gray
-  make_starfield_generator(7,0.5)--1/2, white
-  shark=make_shark(8,60)
+  new_mode.game_objects=game_objects
+
+  if (all_modes==nil) all_modes={}
+  all_modes[name]=new_mode
+  return new_mode
 end
 
-function _update()
+function set_mode(name)
+  if (all_modes==nil) all_modes={}
+  mode=all_modes[name]
+  assert(mode!=nil,"undefined mode "..name)
+  mode.init()
+end
+
+function default_update()
   --update all game objects
   foreach_game_object(function(obj,layer)
     obj:update()
@@ -40,30 +63,38 @@ function _update()
   filter_out_finished()
 end
 
-function _draw()
+function default_draw()
   cls(0)--clear the screen
+end
+-->8
+--menu loop
 
-  foreach_game_object(function(obj,layer)
+-->8
+--game loop
+function game_init()
+  --start score counter at zero
+  mode.score=0
+
+  --create initial objects
+  make_starfield_generator(5,0.05)--1/20, dk gray
+  make_starfield_generator(6,0.25)--1/4, lt gray
+  make_starfield_generator(7,0.5)--1/2, white
+  make_shark(8,60)
+end
+
+function game_update()
+  default_update()
+end
+
+function game_draw()
+  default_draw()
+
+  foreach_game_object(function(obj)
     if (obj.visible) obj:draw()
   end)
 
-  --[[
-  --small ship
-  spr(1,40,40)
-
-  --big ship
-  pal(14,12)
-  sspr(16,32,16,16,50,50)
-  pal()
-
-  --big ship
-  pal(14,10)
-  sspr(16,32,16,16,70,70)
-  pal()
-  ]]--
-
   rectfill(0,0,128,6,5)
-  print("score:"..score,1,1,7)
+  print("score:"..mode.score,1,1,7)
   print("fps:"..stat(7),104,1,7)
 end
 -->8
@@ -95,35 +126,10 @@ function make_game_object(name,x,y,z,props)
     obj[key]=value
   end
   --add it to layer `z` in game objects
-  assert(game_objects[z]!=nil,"update game_layers to use z="..z)
-  add(game_objects[z],obj)
+  assert(mode.game_objects[z]!=nil,"update game_layers to use z="..z)
+  add(mode.game_objects[z],obj)
   --return the game object
   return obj
-end
-
---hit detection helper functions
-function rects_overlapping(left1,top1,right1,bottom1,left2,top2,right2,bottom2)
-  return right1>left2 and right2>left1 and bottom1>top2 and bottom2>top1
-end
-
-function bounding_boxes_overlapping(obj1,obj2)
-  return rects_overlapping(obj1.x,obj1.y,obj1.x+obj1.width,obj1.y+obj1.height,obj2.x,obj2.y,obj2.x+obj2.width,obj2.y+obj2.height)
-end
-
-function foreach_game_object(callback)
-  local layer,list,obj
-  for layer in all(game_layers) do
-    list=game_objects[layer]
-    for obj in all(list) do
-      callback(obj,layer)
-    end
-  end
-end
-
-function foreach_game_object_named(name,callback)
-  foreach_game_object(function(obj,layer)
-    if (obj.name==name) callback(obj,layer)
-  end)
 end
 
 function make_shark(x,y)
@@ -227,6 +233,31 @@ function make_starfield_generator(color,speed)
 end
 -->8
 --helpers
+--hit detection helper functions
+function rects_overlapping(left1,top1,right1,bottom1,left2,top2,right2,bottom2)
+  return right1>left2 and right2>left1 and bottom1>top2 and bottom2>top1
+end
+
+function bounding_boxes_overlapping(obj1,obj2)
+  return rects_overlapping(obj1.x,obj1.y,obj1.x+obj1.width,obj1.y+obj1.height,obj2.x,obj2.y,obj2.x+obj2.width,obj2.y+obj2.height)
+end
+
+function foreach_game_object(callback)
+  local layer,list,obj
+  for layer in all(game_layers) do
+    list=mode.game_objects[layer]
+    for obj in all(list) do
+      callback(obj,layer,list)
+    end
+  end
+end
+
+function foreach_game_object_named(name,callback)
+  foreach_game_object(function(obj,layer,list)
+    if (obj.name==name) callback(obj,layer,list)
+  end)
+end
+
 function rndb(low,high)
   return flr(rnd(high-low+1)+low)
 end
@@ -246,8 +277,8 @@ function decrement_counter(n)
 end
 
 function filter_out_finished()
-  foreach_game_object(function(obj,layer)
-    if (obj.finished) del(game_objects[layer],obj)
+  foreach_game_object(function(obj,layer,list)
+    if (obj.finished) del(list,obj)
   end)
 end
 __gfx__
@@ -301,4 +332,4 @@ __gfx__
 11111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 010200000c6100c6100c6100c6100c6100c6100c6100c6100d6000d6000d6000d6000d60016600026000160016600166001660005600076000860008600086000860000600006000060000600006000060000600
-0101000024010260002b00019000120000b0000800005000040000300002000020000100005000040000300002000010000100010000076001000010000110001300014000100000060000600006000060000600
+010100002b020240202b00019000120000b0000800005000040000300002000020000100005000040000300002000010000100010000070001000010000110001300014000100000000000000000000000000000
