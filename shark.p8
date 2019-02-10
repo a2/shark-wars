@@ -156,7 +156,7 @@ function intro_draw(mode)
   local d=5--dialog
 
   local m
-  for m=1,mode.message do
+  for m=max(1,mode.message-2),mode.message do
     if m>=mode.message then
       h=10
       d=7
