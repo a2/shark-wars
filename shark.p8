@@ -183,7 +183,7 @@ end
 function game_draw(mode)
   rectfill(0,0,128,6,5)
   print("score:"..mode.score,1,1,7)
-  print("fps:"..stat(7),104,1,7)
+  --print("fps:"..stat(7),104,1,7)
 end
 -->8
 --makers
