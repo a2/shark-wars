@@ -5,9 +5,9 @@ __lua__
 --by a2
 
 function _init()
-  add_mode("boot",noop,default_update,default_draw)
+  add_mode("intro",intro_init,intro_update,intro_draw)
   add_mode("game",game_init,game_update,game_draw)
-  set_mode("boot")
+  set_mode("intro")
 end
 
 function _update()
@@ -18,14 +18,12 @@ function _draw()
   mode.draw()
 end
 
---valid layer indices
---update here to use a new z-value
+--valid layer indices (update here to allow new z-values)
 game_layers={-1,0,1}
 -->8
 --modes
 function add_mode(name,init,update,draw,props)
-  local new_mode
-  new_mode={
+  local new_mode={
     name=name,
     init=init,
     update=update,
@@ -33,17 +31,18 @@ function add_mode(name,init,update,draw,props)
   }
 
   --game objects
-  local game_objects,layer
-  game_objects={}
+  local layer
+  new_mode.game_objects={}
   for layer in all(game_layers) do
-    game_objects[layer]={}
+    new_mode.game_objects[layer]={}
   end
-  new_mode.game_objects=game_objects
 
   --add additional properties
-  local key,value
-  for key,value in pairs(props) do
-    new_mode[key]=value
+  if props!=nil then
+    local key,value
+    for key,value in pairs(props) do
+      new_mode[key]=value
+    end
   end
 
   if (all_modes==nil) all_modes={}
@@ -52,7 +51,6 @@ function add_mode(name,init,update,draw,props)
 end
 
 function set_mode(name)
-  if (all_modes==nil) all_modes={}
   mode=all_modes[name]
   assert(mode!=nil,"undefined mode "..name)
   mode.init()
@@ -70,10 +68,138 @@ end
 
 function default_draw()
   cls(0)--clear the screen
+
+  --draw visible game objects
+  foreach_game_object(function(obj)
+    if (obj.visible) obj:draw()
+  end)
 end
 -->8
---menu loop
+--intro loop
+local cprint=function(clr,text)
+  color(clr)
+  print(text)
+end
 
+function intro_init()
+  mode.messages={
+    function(h,d)
+      cprint(h,"[nasa says]")
+      cprint(d,"we have received a message\nfrom the aliens on enceladus,\nthe moon of saturn.")
+      cprint(h,"\n⬆️⬇️ navigate - ❎ skip intro\n")
+    end,
+    function(h,d)
+      cprint(h,"[the message reads]")
+      cprint(d,"there is a threat!\nit comes from a faraway galaxy!\nplease save us!!\n")
+    end,
+    function(h,d)
+      cprint(h,"[meanwhile]")
+      cprint(d,"to protect the solar system\nand earth, nasa decides to help\nthe aliens fight by sending\nvery advanced weapons.\n")
+    end,
+    function(h,d)
+      cprint(d,"but alas, nasa accidentally sent\ntheir top-secret experiment:\nshark x... duh duh duhhhh\n")
+    end,
+    function(h,d)
+      cprint(h,"[nasa says]")
+      cprint(d,"oh no! shark x should never have")
+      cprint(d,"left the laboratory.\n")
+    end,
+    function(h,d)
+      cprint(d,"no one knows how it will perform")
+      cprint(d,"but it is too late to abort")
+      cprint(d,"the mission.\n")
+    end,
+    function(h,d)
+      cprint(d,"the threat is already at")
+      cprint(d,"our gates!\n")
+    end,
+    function(h,d)
+      cprint(d,"your mission, should you choose")
+      cprint(d,"to accept it:\n")
+    end,
+    function(h,d)
+      cprint(d,"remote control the shark and")
+      cprint(d,"make sure the threat does not")
+      cprint(d,"get past saturn.\n")
+    end,
+    function(h,d)
+      cprint(d,"the future of humanity,")
+      cprint(d,"and all alien-kind,")
+      cprint(d,"rests between your fins.\n")
+    end,
+    function(h,d)
+      cprint(d,"good luck, shark x.\n")
+    end,
+    function(h,d)
+      cprint(h,"press 🅾️ to start")
+    end
+  }
+  mode.message=1
+  mode.wants_skip=0
+end
+
+function intro_update()
+  default_update()
+
+  if mode.wants_skip>0 then
+    if btnp(2) or btnp(3) then
+      mode.wants_skip=ternary(mode.wants_skip==1,2,1)
+    elseif btnp(5) or (btnp(4) and mode.wants_skip==2) then
+      mode.wants_skip=0
+    elseif btnp(4) then
+      set_mode("game")
+    end
+  else
+    if btnp(4) and mode.message==#mode.messages then
+      set_mode("game")
+    elseif btnp(5) then
+      mode.wants_skip=1
+    elseif btnp(2) and mode.message>1 then
+      mode.message-=1
+    elseif btnp(3) and mode.message<#mode.messages then
+      mode.message+=1
+    end
+  end
+end
+
+function intro_draw()
+  default_draw()
+
+  cursor(0,0)
+  local h=5--header
+  local d=5--dialog
+
+  local m
+  local ws=mode.wants_skip
+  for m=1,mode.message do
+    if ws==0 and m>=mode.message then
+      h=10
+      d=7
+    end
+
+    local fn=mode.messages[m]
+    fn(h,d)
+  end
+
+  if ws>0 then
+    rectfill(18,40,108,89,6)
+    rect(18,40,108,89,7)
+
+    cursor(22,44)
+    cprint(8,"[alert]\n")
+
+    cprint(0,"do want to skip this")
+    cprint(0,"delightful narrative?\n")
+
+    if ws==1 then
+      cprint(13,"> skip")
+      cprint(0,"back")
+    elseif ws==2 then
+      cprint(0,"skip")
+      cprint(13,"> back")
+    end
+  end
+end
 -->8
 --game loop
 function game_init()
@@ -93,10 +219,6 @@ end
 
 function game_draw()
   default_draw()
-
-  foreach_game_object(function(obj)
-    if (obj.visible) obj:draw()
-  end)
 
   rectfill(0,0,128,6,5)
   print("score:"..mode.score,1,1,7)
@@ -189,8 +311,8 @@ function make_laser(x,y)
 end
 
 function _make_starfield(x,y,color,speed)
-  local i,stars
-  stars={}
+  local i
+  local stars={}
   for i=1,10 do
     add(stars,{x=rndb(0,127),y=rndb(0,127)})
   end
@@ -217,13 +339,13 @@ function make_starfield_generator(color,speed)
     starfields={_make_starfield(0,0,color,speed)},
     visible=false,
     update=function(self)
-      local sf,max
-      max=0
-      for sf in all(self.starfields) do
-        if sf.x+sf.width<0 then
-          sf.finished=true
-        elseif sf.x+sf.width>max then
-          max=sf.x+sf.width
+      local field
+      local max=0
+      for field in all(self.starfields) do
+        if field.x+field.width<0 then
+          field.finished=true
+        elseif field.x+field.width>max then
+          max=field.x+field.width
         end
       end
 
@@ -248,9 +370,9 @@ function bounding_boxes_overlapping(obj1,obj2)
 end
 
 function foreach_game_object(callback)
-  local layer,list,obj
+  local layer,obj
   for layer in all(game_layers) do
-    list=mode.game_objects[layer]
+    local list=mode.game_objects[layer]
     for obj in all(list) do
       callback(obj,layer,list)
     end
