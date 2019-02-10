@@ -11,39 +11,31 @@ function _init()
 end
 
 function _update()
-  mode.update()
+  mode:update()
 end
 
 function _draw()
-  mode.draw()
+  mode:draw()
 end
 
 --valid layer indices (update here to allow new z-values)
 game_layers={-1,0,1}
 -->8
 --modes
-function add_mode(name,init,update,draw,props)
-  local new_mode={
-    name=name,
-    init=init,
-    update=update,
-    draw=draw
-  }
-
-  --game objects
-  local layer
-  new_mode.game_objects={}
-  for layer in all(game_layers) do
-    new_mode.game_objects[layer]={}
-  end
-
-  --add additional properties
-  if props!=nil then
-    local key,value
-    for key,value in pairs(props) do
-      new_mode[key]=value
+function add_mode(name,init,update,draw,skip_default)
+  function wrap(default,custom)
+    return function(self)
+      if (not skip_default) default(self)
+      custom(self)
     end
   end
+
+  local new_mode={
+    name=name,
+    init=wrap(default_init,init),
+    update=wrap(default_update,update),
+    draw=wrap(default_draw,draw)
+  }
 
   if (all_modes==nil) all_modes={}
   all_modes[name]=new_mode
@@ -53,10 +45,19 @@ end
 function set_mode(name)
   mode=all_modes[name]
   assert(mode!=nil,"undefined mode "..name)
-  mode.init()
+  mode:init()
 end
 
-function default_update()
+function default_init(self)
+  --game objects
+  local layer
+  self.game_objects={}
+  for layer in all(game_layers) do
+    self.game_objects[layer]={}
+  end
+end
+
+function default_update(self)
   --update all game objects
   foreach_game_object(function(obj,layer)
     obj:update()
@@ -66,7 +67,7 @@ function default_update()
   filter_out_finished()
 end
 
-function default_draw()
+function default_draw(self)
   cls(0)--clear the screen
 
   --draw visible game objects
@@ -138,8 +139,6 @@ function intro_init()
 end
 
 function intro_update()
-  default_update()
-
   if btnp(4) and mode.message==#mode.messages then
     set_mode("game")
   elseif btnp(5) then
@@ -152,8 +151,6 @@ function intro_update()
 end
 
 function intro_draw()
-  default_draw()
-
   cursor(0,0)
   local h=5--header
   local d=5--dialog
@@ -181,12 +178,9 @@ function game_init()
 end
 
 function game_update()
-  default_update()
 end
 
 function game_draw()
-  default_draw()
-
   rectfill(0,0,128,6,5)
   print("score:"..mode.score,1,1,7)
   print("fps:"..stat(7),104,1,7)
