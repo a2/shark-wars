@@ -38,8 +38,13 @@ function add_mode(name,init,update,draw,props)
   for layer in all(game_layers) do
     game_objects[layer]={}
   end
-
   new_mode.game_objects=game_objects
+
+  --add additional properties
+  local key,value
+  for key,value in pairs(props) do
+    new_mode[key]=value
+  end
 
   if (all_modes==nil) all_modes={}
   all_modes[name]=new_mode
