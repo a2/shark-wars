@@ -7,12 +7,21 @@ local score
 local game_objects
 local shark
 
+--valid layer indices
+--update here to use a new z-value
+game_layers={-1,0,1}
+
 function _init()
   --start score counter at zero
   score=0
 
   --create the game objects
+  game_layers={-1,0,1}
   game_objects={}
+  local layer
+  for layer in all(game_layers) do
+    game_objects[layer]= {}
+  end
 
   --create initial objects
   make_starfield_generator(5,0.05)--1/20, dk gray
@@ -23,22 +32,20 @@ end
 
 function _update()
   --update all game objects
-  local obj
-  for obj in all(game_objects) do
+  foreach_game_object(function(obj,layer)
     obj:update()
-  end
+  end)
 
   --filter out "dead" objects
-  filter_out_finished(game_objects)
+  filter_out_finished()
 end
 
 function _draw()
   cls(0)--clear the screen
 
-  local obj
-  for obj in all(game_objects) do
+  foreach_game_object(function(obj,layer)
     if (obj.visible) obj:draw()
-  end
+  end)
 
   --[[
   --small ship
@@ -57,7 +64,6 @@ function _draw()
 
   rectfill(0,0,128,6,5)
   print("score:"..score,1,1,7)
-  --print("game_objects:"..#game_objects,1,1,7)
   print("fps:"..stat(7),104,1,7)
 end
 -->8
@@ -65,7 +71,7 @@ end
 function noop()
 end
 
-function make_game_object(name,x,y,props)
+function make_game_object(name,x,y,z,props)
   local obj={
     name=name,
     x=x,
@@ -88,8 +94,9 @@ function make_game_object(name,x,y,props)
   for key,value in pairs(props) do
     obj[key]=value
   end
-  --add it to the list of game objects
-  add(game_objects,obj)
+  --add it to layer `z` in game objects
+  assert(game_objects[z]!=nil,"update game_layers to use z="..z)
+  add(game_objects[z],obj)
   --return the game object
   return obj
 end
@@ -103,17 +110,24 @@ function bounding_boxes_overlapping(obj1,obj2)
   return rects_overlapping(obj1.x,obj1.y,obj1.x+obj1.width,obj1.y+obj1.height,obj2.x,obj2.y,obj2.x+obj2.width,obj2.y+obj2.height)
 end
 
-function for_each_game_object(name,callback)
-  local obj
-  for obj in all(game_objects) do
-    if obj.name==name then
-      callback(obj)
+function foreach_game_object(callback)
+  local layer,list,obj
+  for layer in all(game_layers) do
+    list=game_objects[layer]
+    for obj in all(list) do
+      callback(obj,layer)
     end
   end
 end
 
+function foreach_game_object_named(name,callback)
+  foreach_game_object(function(obj,layer)
+    if (obj.name==name) callback(obj,layer)
+  end)
+end
+
 function make_shark(x,y)
-  return make_game_object("shark",x,y,{
+  return make_game_object("shark",x,y,0,{
     width=8,
     height=8,
     last_laser=nil,
@@ -123,12 +137,14 @@ function make_shark(x,y)
     update=function(self)
       --shoot on (z)
       if btn(4) then
+        sfx(1)
         if self.last_laser then
           self.last_laser.x-=1
           self.last_laser.width+=1
         else
           local x,y=self:emitter_location()
           self.last_laser=make_laser(x,y)
+          -- sfx(1)
         end
       else
         --shark only move when not shooting lasers
@@ -147,10 +163,10 @@ function make_shark(x,y)
 end
 
 function make_laser(x,y)
-  return make_game_object("laser",x,y,{
+  return make_game_object("laser",x,y,1,{
     width=1,
     height=1,
-    color=8,--rndb(8,10),
+    color=8,
     update=function(self)
       self.x+=1
       if (self.x>128) self.finished=true
@@ -168,7 +184,7 @@ function _make_starfield(x,y,color,speed)
     add(stars,{x=rndb(0,127),y=rndb(0,127)})
   end
 
-  return make_game_object("starfield",x,y,{
+  return make_game_object("starfield",x,y,-1,{
     width=128,
     height=128,
     stars=stars,
@@ -185,7 +201,7 @@ function _make_starfield(x,y,color,speed)
 end
 
 function make_starfield_generator(color,speed)
-  return make_game_object("starfield_generator",0,0,{
+  return make_game_object("starfield_generator",0,0,-1,{
     max=128,
     starfields={_make_starfield(0,0,color,speed)},
     visible=false,
@@ -229,13 +245,10 @@ function decrement_counter(n)
   return max(0,n-1)
 end
 
-function filter_out_finished(list)
-  local item
-  for item in all(list) do
-    if item.finished then
-      del(list,item)
-    end
-  end
+function filter_out_finished()
+  foreach_game_object(function(obj,layer)
+    if (obj.finished) del(game_objects[layer],obj)
+  end)
 end
 __gfx__
 111155e1000005000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -288,4 +301,4 @@ __gfx__
 11111111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 010200000c6100c6100c6100c6100c6100c6100c6100c6100d6000d6000d6000d6000d60016600026000160016600166001660005600076000860008600086000860000600006000060000600006000060000600
-000100003a010330102b01019010120100b0100801005010040100301002010020100101005000040000300002000010000100010000076001000010000110001300014000100000060000600006000060000600
+0101000024010260002b00019000120000b0000800005000040000300002000020000100005000040000300002000010000100010000076001000010000110001300014000100000060000600006000060000600
