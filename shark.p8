@@ -7,7 +7,7 @@ __lua__
 function _init()
   add_mode("intro",intro_init,intro_update,intro_draw)
   add_mode("game",game_init,game_update,game_draw)
-  set_mode("game")
+  set_mode("intro")
 end
 
 function _update()
@@ -151,7 +151,6 @@ function intro_update(mode)
 end
 
 function intro_draw(mode)
-  cursor(0,0)
   local h=5--header
   local d=5--dialog
 
@@ -167,6 +166,10 @@ end
 -->8
 --game loop
 function game_init(mode)
+  --gameplay view constraints
+  mode.min_y=9
+  mode.max_y=128
+
   --start score counter at zero
   mode.score=0
 
@@ -242,8 +245,8 @@ function make_shark(x,y)
       else
         self.charge=min(self.charge_max,self.charge+0.25)
         --shark only moves when not shooting lasers
-        if (btn(2) and self.y>8) self.y-=1
-        if (btn(3) and self.y+self.height<128) self.y+=1
+        if (btn(2) and self.y>mode.min_y) self.y-=1
+        if (btn(3) and self.y+self.height<mode.max_y) self.y+=1
         self.last_laser=nil
       end
     end,
