@@ -24,9 +24,9 @@ game_layers={-1,0,1}
 --modes
 function add_mode(name,init,update,draw,skip_default)
   function wrap(default,custom)
-    return function(self)
-      if (not skip_default) default(self)
-      custom(self)
+    return function(mode)
+      if (not skip_default) default(mode)
+      custom(mode)
     end
   end
 
@@ -48,16 +48,16 @@ function set_mode(name)
   mode:init()
 end
 
-function default_init(self)
+function default_init(mode)
   --game objects
   local layer
-  self.game_objects={}
+  mode.game_objects={}
   for layer in all(game_layers) do
-    self.game_objects[layer]={}
+    mode.game_objects[layer]={}
   end
 end
 
-function default_update(self)
+function default_update(mode)
   --update all game objects
   foreach_game_object(function(obj,layer)
     obj:update()
@@ -67,7 +67,7 @@ function default_update(self)
   filter_out_finished()
 end
 
-function default_draw(self)
+function default_draw(mode)
   cls(0)--clear the screen
 
   --draw visible game objects
@@ -82,9 +82,9 @@ function cprint(clr,text)
   print(text)
 end
 
-function intro_init(self)
-  self.message=1
-  self.messages={
+function intro_init(mode)
+  mode.message=1
+  mode.messages={
     function(h,d)
       cprint(h,"[nasa says]")
       cprint(d,"we have received a message\nfrom the aliens on enceladus,\nthe moon of saturn.")
@@ -138,7 +138,7 @@ function intro_init(self)
   }
 end
 
-function intro_update()
+function intro_update(mode)
   if btnp(4) and mode.message==#mode.messages then
     set_mode("game")
   elseif btnp(5) then
@@ -150,25 +150,25 @@ function intro_update()
   end
 end
 
-function intro_draw(self)
+function intro_draw(mode)
   cursor(0,0)
   local h=5--header
   local d=5--dialog
 
   local m
-  for m=1,self.message do
-    if m>=self.message then
+  for m=1,mode.message do
+    if m>=mode.message then
       h=10
       d=7
     end
-    self.messages[m](h,d)
+    mode.messages[m](h,d)
   end
 end
 -->8
 --game loop
-function game_init(self)
+function game_init(mode)
   --start score counter at zero
-  self.score=0
+  mode.score=0
 
   --create initial objects
   make_starfield_generator(5,0.05)--1/20, dk gray
@@ -177,12 +177,12 @@ function game_init(self)
   make_shark(8,60)
 end
 
-function game_update(self)
+function game_update(mode)
 end
 
-function game_draw(self)
+function game_draw(mode)
   rectfill(0,0,128,6,5)
-  print("score:"..self.score,1,1,7)
+  print("score:"..mode.score,1,1,7)
   print("fps:"..stat(7),104,1,7)
 end
 -->8
