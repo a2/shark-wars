@@ -77,7 +77,7 @@ function default_draw(self)
 end
 -->8
 --intro loop
-local cprint=function(clr,text)
+function cprint(clr,text)
   color(clr)
   print(text)
 end
