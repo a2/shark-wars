@@ -135,30 +135,19 @@ function intro_init()
     end
   }
   mode.message=1
-  mode.wants_skip=0
 end
 
 function intro_update()
   default_update()
 
-  if mode.wants_skip>0 then
-    if btnp(2) or btnp(3) then
-      mode.wants_skip=ternary(mode.wants_skip==1,2,1)
-    elseif btnp(5) or (btnp(4) and mode.wants_skip==2) then
-      mode.wants_skip=0
-    elseif btnp(4) then
-      set_mode("game")
-    end
-  else
-    if btnp(4) and mode.message==#mode.messages then
-      set_mode("game")
-    elseif btnp(5) then
-      mode.wants_skip=1
-    elseif btnp(2) and mode.message>1 then
-      mode.message-=1
-    elseif btnp(3) and mode.message<#mode.messages then
-      mode.message+=1
-    end
+  if btnp(4) and mode.message==#mode.messages then
+    set_mode("game")
+  elseif btnp(5) then
+    mode.message=#mode.messages
+  elseif btnp(2) and mode.message>1 then
+    mode.message-=1
+  elseif btnp(3) and mode.message<#mode.messages then
+    mode.message+=1
   end
 end
 
@@ -170,34 +159,12 @@ function intro_draw()
   local d=5--dialog
 
   local m
-  local ws=mode.wants_skip
   for m=1,mode.message do
-    if ws==0 and m>=mode.message then
+    if m>=mode.message then
       h=10
       d=7
     end
-
-    local fn=mode.messages[m]
-    fn(h,d)
-  end
-
-  if ws>0 then
-    rectfill(18,40,108,89,6)
-    rect(18,40,108,89,7)
-
-    cursor(22,44)
-    cprint(8,"[alert]\n")
-
-    cprint(0,"do want to skip this")
-    cprint(0,"delightful narrative?\n")
-
-    if ws==1 then
-      cprint(13,"> skip")
-      cprint(0,"back")
-    elseif ws==2 then
-      cprint(0,"skip")
-      cprint(13,"> back")
-    end
+    mode.messages[m](h,d)
   end
 end
 -->8
