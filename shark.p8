@@ -15,10 +15,10 @@ function _init()
   game_objects={}
 
   --create initial objects
+  make_starfield_generator(5,0.05)--1/20, dk gray
+  make_starfield_generator(6,0.25)--1/4, lt gray
+  make_starfield_generator(7,0.5)--1/2, white
   shark=make_shark(8,60)
-
-  --start the music
-  --music(0)
 end
 
 function _update()
@@ -34,13 +34,13 @@ end
 
 function _draw()
   cls(0)--clear the screen
-  draw_stars()--draw stars (seeds rng)
 
   local obj
   for obj in all(game_objects) do
     if (obj.visible) obj:draw()
   end
 
+  --[[
   --small ship
   spr(1,40,40)
 
@@ -53,18 +53,12 @@ function _draw()
   pal(14,10)
   sspr(16,32,16,16,70,70)
   pal()
+  ]]--
 
   rectfill(0,0,128,6,5)
-  --print("score:"..score,1,1,7)
-  print("game_objects: "..#game_objects,1,1,7)
-end
-
-function draw_stars()
-  srand(1)
-  for i=1,50 do
-    pset(rndb(0,127),rndb(8,127),rndb(5,7))
-  end
-  srand(time())
+  print("score:"..score,1,1,7)
+  --print("game_objects:"..#game_objects,1,1,7)
+  print("fps:"..stat(7),104,1,7)
 end
 -->8
 --makers
@@ -122,6 +116,7 @@ function make_shark(x,y)
   return make_game_object("shark",x,y,{
     width=8,
     height=8,
+    last_laser=nil,
     emitter_location=function(self)
       return self.x+6,self.y
     end,
@@ -162,6 +157,55 @@ function make_laser(x,y)
     end,
     draw=function(self)
       line(self.x,self.y,self.x+self.width-1,self.y+self.height-1,self.color)
+    end
+  })
+end
+
+function _make_starfield(x,y,color,speed)
+  local i,stars
+  stars={}
+  for i=1,10 do
+    add(stars,{x=rndb(0,127),y=rndb(0,127)})
+  end
+
+  return make_game_object("starfield",x,y,{
+    width=128,
+    height=128,
+    stars=stars,
+    update=function(self)
+      self.x-=speed
+    end,
+    draw=function(self)
+      local star
+      for star in all(stars) do
+        pset(self.x+star.x,self.y+star.y,color)
+      end
+    end
+  })
+end
+
+function make_starfield_generator(color,speed)
+  return make_game_object("starfield_generator",0,0,{
+    max=128,
+    starfields={_make_starfield(0,0,color,speed)},
+    visible=false,
+    update=function(self)
+      local sf,max
+      max=0
+      for sf in all(self.starfields) do
+        if sf.x+sf.width<0 then
+          sf.finished=true
+        elseif sf.x+sf.width>max then
+          max=sf.x+sf.width
+        end
+      end
+
+      if max<128 then
+        add(self.starfields,_make_starfield(max,0,color,speed))
+        max+=128
+      end
+
+      self.max=max
     end
   })
 end
