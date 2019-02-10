@@ -7,7 +7,7 @@ __lua__
 function _init()
   add_mode("intro",intro_init,intro_update,intro_draw)
   add_mode("game",game_init,game_update,game_draw)
-  set_mode("intro")
+  set_mode("game")
 end
 
 function _update()
@@ -224,27 +224,39 @@ function make_shark(x,y)
   return make_game_object("shark",x,y,0,{
     width=8,
     height=8,
-    last_laser=nil,
-    emitter_location=function(self)
-      return self.x+6,self.y
-    end,
+    charge=50,
+    charge_max=50,
     update=function(self)
-      --shoot on (z)
+      --shoot on 🅾️
       if btn(4) then
-        sfx(1)
-        if self.last_laser then
-          self.last_laser.x-=1
-          self.last_laser.width+=1
-        else
-          local x,y=self:emitter_location()
-          self.last_laser=make_laser(x,y)
-          -- sfx(1)
+        if self.charge>0 then
+          self.charge-=1
+          sfx(1)
+          if self.last_laser then
+            self.last_laser.x-=1
+            self.last_laser.width+=1
+          else
+            self.last_laser=make_laser(self.x+6,self.y)
+          end
         end
       else
-        --shark only move when not shooting lasers
+        self.charge=min(self.charge_max,self.charge+0.25)
+        --shark only moves when not shooting lasers
         if (btn(2) and self.y>8) self.y-=1
         if (btn(3) and self.y+self.height<128) self.y+=1
         self.last_laser=nil
+      end
+    end,
+    charge_bar_color=function(self)
+      local percent=self.charge/self.charge_max
+      if percent>0.75 then
+        return 11
+      elseif percent>0.5 then
+        return 10
+      elseif percent>0.25 then
+        return 9
+      else
+        return 8
       end
     end,
     draw=function(self)
@@ -252,6 +264,9 @@ function make_shark(x,y)
       palt(1,true)
       spr(0,self.x,self.y)
       palt()
+
+      local percent=self.charge/self.charge_max
+      line(-1,7,flr(percent*129)-1,7,self:charge_bar_color())
     end,
   })
 end
@@ -260,34 +275,36 @@ function make_laser(x,y)
   return make_game_object("laser",x,y,1,{
     width=1,
     height=1,
-    color=8,
     update=function(self)
       self.x+=1
       if (self.x>128) self.finished=true
     end,
     draw=function(self)
-      line(self.x,self.y,self.x+self.width-1,self.y+self.height-1,self.color)
+      line(self.x,self.y,self.x+self.width-1,self.y+self.height-1,8)
     end
   })
 end
 
-function _make_starfield(x,y,color,speed)
+function _initial_stars(count)
   local i
   local stars={}
-  for i=1,10 do
+  for i=1,count do
     add(stars,{x=rndb(0,127),y=rndb(0,127)})
   end
+  return stars
+end
 
-  return make_game_object("starfield",x,y,-1,{
+function _make_starfield(x,color,speed)
+  return make_game_object("starfield",x,0,-1,{
     width=128,
     height=128,
-    stars=stars,
+    stars=_initial_stars(10),
     update=function(self)
       self.x-=speed
     end,
     draw=function(self)
       local star
-      for star in all(stars) do
+      for star in all(self.stars) do
         pset(self.x+star.x,self.y+star.y,color)
       end
     end
@@ -297,7 +314,7 @@ end
 function make_starfield_generator(color,speed)
   return make_game_object("starfield_generator",0,0,-1,{
     max=128,
-    starfields={_make_starfield(0,0,color,speed)},
+    starfields={_make_starfield(0,color,speed)},
     visible=false,
     update=function(self)
       local field
@@ -311,7 +328,7 @@ function make_starfield_generator(color,speed)
       end
 
       if max<128 then
-        add(self.starfields,_make_starfield(max,0,color,speed))
+        add(self.starfields,_make_starfield(max,color,speed))
         max+=128
       end
 
