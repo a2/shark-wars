@@ -10,14 +10,17 @@ local shark
 function _init()
   --start score counter at zero
   score=0
+
   --create the game objects
   game_objects={}
+
   --create initial objects
-  shark=make_shark(48,0)
+  shark=make_shark(8,56)
   --make_treasure(60,120)
-  make_fish_generator()
+  --make_fish_generator()
+
   --start the music
-  music(0)
+  --music(0)
 end
 
 function _update()
@@ -32,36 +35,27 @@ function _update()
 end
 
 function _draw()
-  patterns={
-    0b1111111111111111,
-    0b0111111111111111,
-    0b0111111111011111,
-    0b0101111111011111,
-    0b0101111101011111,
-    0b0101101101011111,
-    0b0101101101011110,
-    0b0101101001011110,
-    0b0101101001011010,
-    0b0001101001011010,
-    0b0001101001001010,
-    0b0000101001001010,
-    0b0000101000001010,
-    0b0000001000001010,
-    0b0000001000001000,
-    0b0000000000000000,
-  }
-
   --clear the screen
-  fillp(patterns[flr(shark.y*16/114)+1])
-  rectfill(0,0,128,128,0x10)
-  fillp()
+  cls(0)
+
+  --draw stars (seeds rng)
+  draw_stars()
 
   local obj
   for obj in all(game_objects) do
     if (obj.visible) obj:draw()
   end
 
+  rectfill(0,0,128,6,5)
   print("score:"..score,1,1,7)
+end
+
+function draw_stars()
+  srand(1)
+  for i=1,50 do
+    pset(rndb(0,127),rndb(8,127),rndb(5,7))
+  end
+  srand(time())
 end
 -->8
 --makers
@@ -119,25 +113,15 @@ function make_shark(x,y)
   return make_game_object("shark",x,y,{
     width=32,
     height=16,
-    flipped=false,
     chomp=0,--chomp state
     tick=0,--tick/tock
     frame=0,--sprite frame
     mouth=function(self)
-      return self.x+ternary(self.flipped,3,self.width-3),self.y+11
+      return self.x+self.width-3,self.y+11
     end,
     update=function(self)
-      --move
-      if btn(0) and self.x>0 then
-        self.x-=1
-        self.flipped=true
-      end
-      if btn(1) and self.x+self.width<128 then
-        self.x+=1
-        self.flipped=false
-      end
-      if (btn(2) and self.y>0) self.y-=1
-      if (btn(3) and self.y+self.height<128) self.y+=1
+      if (btn(2) and self.y>8) self.y-=2
+      if (btn(3) and self.y+self.height<128) self.y+=2
 
       --update
       self.tick+=1
@@ -149,20 +133,23 @@ function make_shark(x,y)
       --chomp
       if (self.chomp==0 and btn(4)) self.chomp=1
       if (self.chomp==1 and self.frame==0) self.chomp=2
-      if self.chomp==2 and self.frame==7 then
-        --bubbles
+      if self.chomp==2 then
+        --laser
         local mx,my=self:mouth()
-        make_bubbles(3,mx,my)
-        self.chomp=0
-        sfx(0)
-
-        mouth={x=mx-2,y=my-2,width=4,height=4}
-        for_each_game_object("fish",function(fish)
-          if bounding_boxes_overlapping(mouth,fish) then
-            fish.finished=true
-            score+=1
-          end
-        end)
+        if self.frame==4 and self.tick==1 then
+          make_laser(mx-3,my-1)
+          sfx(1)
+        elseif self.frame==6 then
+          mouth={x=mx-2,y=my-2,width=4,height=4}
+          for_each_game_object("fish",function(fish)
+            if bounding_boxes_overlapping(mouth,fish) then
+              fish.finished=true
+              score+=1
+            end
+          end)
+        elseif self.frame==7 and self.tick==1 then
+          self.chomp=0
+        end
       end
     end,
     draw=function(self)
@@ -170,14 +157,10 @@ function make_shark(x,y)
       local sx=self.frame*16
       local sy=ternary(self.chomp==2,16,0)
 
-      --draw x1 for head, draw x2 for butt
-      local dx1=ternary(self.flipped,self.x+16,self.x)
-      local dx2=ternary(self.flipped,self.x,self.x+16)
-
       palt(0,false)
       palt(1,true)
-      sspr(sx,32,16,16,dx1,self.y,16,16,self.flipped,false)
-      sspr(sx,sy,16,16,dx2,self.y,16,16,self.flipped,false)
+      sspr(sx,32,16,16,self.x,self.y)
+      sspr(sx,sy,16,16,self.x+16,self.y)
       palt()
     end,
   })
@@ -189,6 +172,20 @@ function make_treasure(x,y)
     height=8,
     draw=function(self)
       spr(100,self.x,self.y)
+    end
+  })
+end
+
+function make_laser(x,y)
+  return make_game_object("laser",x,y,{
+    width=4,
+    height=1,
+    update=function(self)
+      self.x+=1
+      if (self.x>128) self.finished=true
+    end,
+    draw=function(self)
+      line(self.x,self.y,self.x+self.width-1,self.y+self.height-1,8)
     end
   })
 end
@@ -469,6 +466,7 @@ __label__
 
 __sfx__
 010200000c6100c6100c6100c6100c6100c6100c6100c6100d6000d6000d6000d6000d60016600026000160016600166001660005600076000860008600086000860000600006000060000600006000060000600
+000100003a010330102b01019010120100b0100801005010040100301002010020100101005000040000300002000010000100010000076001000010000110001300014000100000060000600006000060000600
 011000200453500505055350050504535005050553500505045350050505535005050453500505055351750004535005050553500505025350050504535005050453500505055350050502535005050453500500
 011000000454004510055300050004540045100553000500045400451005530005000454004510055300050004540045100553000500045400451005530005000454004510055300050004540045100553000500
 011000001054010510115300050010540105101153000500105401051011530005001054010510115300050010540105101153000500105401051011530005001054010510115300050010540105101153000500
@@ -480,8 +478,8 @@ __sfx__
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 012000000454505545045450554504545055450454505545045450254504545055450454505545025450454504545055450454505545045450554504545055450454505545045450554504545055450454505545
 __music__
-00 04054444
-00 07054344
-01 08094344
-02 0a094344
+00 05064444
+00 08064344
+01 090a4344
+02 0b0a4344
 
