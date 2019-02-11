@@ -77,91 +77,120 @@ function default_draw(mode)
 end
 -->8
 --intro loop
-function cprint(clr,text)
-  color(clr)
-  print(text)
-end
-
 function intro_init(mode)
-  mode.message=1
+  mode.colors={
+    {5,5},--inactive
+    {10,7},--active
+  }
+  mode.index=1
   mode.messages={
-    function(h,d)
-      cprint(h,"[nasa says]")
-      cprint(d,"we have received a message\nfrom the aliens on enceladus,\nthe moon of saturn.")
-      cprint(h,"\n⬆️⬇️ navigate - ❎ skip intro\n")
-    end,
-    function(h,d)
-      cprint(h,"[the message reads]")
-      cprint(d,"there is a threat!\nit comes from a faraway galaxy!\nplease save us!!\n")
-    end,
-    function(h,d)
-      cprint(h,"[meanwhile]")
-      cprint(d,"to protect the solar system\nand earth, nasa decides to help\nthe aliens fight by sending\nvery advanced weapons.\n")
-    end,
-    function(h,d)
-      cprint(d,"but alas, nasa accidentally sent\ntheir top-secret experiment:\nshark x... duh duh duhhhh\n")
-    end,
-    function(h,d)
-      cprint(h,"[nasa says]")
-      cprint(d,"oh no! shark x should never have")
-      cprint(d,"left the laboratory.\n")
-    end,
-    function(h,d)
-      cprint(d,"no one knows how it will perform")
-      cprint(d,"but it is too late to abort")
-      cprint(d,"the mission.\n")
-    end,
-    function(h,d)
-      cprint(d,"the threat is already at")
-      cprint(d,"our gates!\n")
-    end,
-    function(h,d)
-      cprint(d,"your mission, should you choose")
-      cprint(d,"to accept it:\n")
-    end,
-    function(h,d)
-      cprint(d,"remote control the shark and")
-      cprint(d,"make sure the threat does not")
-      cprint(d,"get past saturn.\n")
-    end,
-    function(h,d)
-      cprint(d,"the future of humanity,")
-      cprint(d,"and all alien-kind,")
-      cprint(d,"rests between your fins.\n")
-    end,
-    function(h,d)
-      cprint(d,"good luck, shark x.\n")
-    end,
-    function(h,d)
-      cprint(h,"press 🅾️ to start")
-    end
+    {
+      {1,"[nasa says]"},
+      {2,"we have received a message"},
+      {2,"from the aliens on enceladus"},
+      {2,"the moon of saturn."},
+      {1,""},
+      {1,"⬆️⬇️ navigate - ❎ skip intro"},
+    },
+    {
+      {1,"[the message reads]"},
+      {2,"there is a threat!"},
+      {2,"it comes from a faraway galaxy!"},
+      {2,"please save us!!"},
+    },
+    {
+      {1,"[meanwhile]"},
+      {2,"to protect the solar system"},
+      {2,"and earth, nasa decides to help"},
+      {2,"the aliens fight by sending"},
+      {2,"very advanced weapons."},
+    },
+    {
+      {2,"but alas, nasa accidentally sent"},
+      {2,"their top-secret experiment:"},
+      {2,"shark x... duh duh duhhhh"},
+    },
+    {
+      {1,"[nasa says]"},
+      {2,"oh no! shark x should never have"},
+      {2,"left the laboratory."},
+    },
+    {
+      {2,"no one knows how it will perform"},
+      {2,"but it is too late to abort"},
+      {2,"the mission."},
+    },
+    {
+      {2,"the threat is already at"},
+      {2,"our gates!"},
+    },
+    {
+      {2,"your mission, should you choose"},
+      {2,"to accept it:"},
+    },
+    {
+      {2,"remote control the shark and"},
+      {2,"make sure the threat does not"},
+      {2,"get past saturn."},
+    },
+    {
+      {2,"the future of humanity,"},
+      {2,"and all alien-kind,"},
+      {2,"rests between your fins."},
+    },
+    {
+      {2,"good luck, shark x."},
+    },
+    {
+      {1,"press 🅾️ to start"},
+    },
   }
 end
 
 function intro_update(mode)
-  if btnp(4) and mode.message==#mode.messages then
+  if btnp(4) and mode.index==#mode.messages then
     set_mode("game")
   elseif btnp(5) then
-    mode.message=#mode.messages
-  elseif btnp(2) and mode.message>1 then
-    mode.message-=1
-  elseif btnp(3) and mode.message<#mode.messages then
-    mode.message+=1
+    mode.index=#mode.messages
+  elseif btnp(2) and mode.index>1 then
+    mode.index-=1
+  elseif btnp(3) and mode.index<#mode.messages then
+    mode.index+=1
   end
 end
 
 function intro_draw(mode)
-  local h=5--header
-  local d=5--dialog
-
-  local m
-  for m=max(1,mode.message-2),mode.message do
-    if m>=mode.message then
-      h=10
-      d=7
+  function draw(message,palette)
+    local i
+    for i=1,#message do
+      color(mode.colors[palette][message[i][1]])
+      print(message[i][2])
     end
-    mode.messages[m](h,d)
   end
+
+  local index=mode.index
+
+  --count lines until index
+  local i
+  local lines=0
+  for i=1,index-1 do
+    lines+=#mode.messages[i]
+  end
+
+  --go backwards
+  --max 21 visible lines of text (128/6)
+  local start=1
+  while lines>21 do
+    lines-=#mode.messages[start]
+    start+=1
+  end
+
+  for i=start,index-1 do
+    draw(mode.messages[i],1)
+    print("")
+  end
+
+  draw(mode.messages[index],2)
 end
 -->8
 --game loop
