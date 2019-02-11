@@ -160,12 +160,18 @@ function intro_update(mode)
 end
 
 function intro_draw(mode)
-  function draw(message,palette)
+  --each text line is 6px
+  local line_height=6
+
+  --draw message backwards, starting at y
+  function draw_back(message,y,palette)
     local i
-    for i=1,#message do
-      color(mode.colors[palette][message[i][1]])
-      print(message[i][2])
+    for i=#message,1,-1 do
+      print(message[i][2],0,y,mode.colors[palette][message[i][1]])
+      y-=line_height
+      if (y<0) break
     end
+    return y-line_height
   end
 
   local index=mode.index
@@ -174,23 +180,18 @@ function intro_draw(mode)
   local i
   local lines=0
   for i=1,index-1 do
-    lines+=#mode.messages[i]
+    lines+=#mode.messages[i]+1--extra for inter-message spacing
   end
 
-  --go backwards
-  --max 21 visible lines of text (128/6)
-  local start=1
-  while lines>21 do
-    lines-=#mode.messages[start]
-    start+=1
-  end
+  --find correct starting y
+  local y=line_height*min(20,lines-1+#mode.messages[index])
 
-  for i=start,index-1 do
-    draw(mode.messages[i],1)
-    print("")
+  --start at message[index] and go backwards
+  y=draw_back(mode.messages[index],y,2)
+  for i=index-1,1,-1 do
+    y=draw_back(mode.messages[i],y,1)
+    if (y<0) break
   end
-
-  draw(mode.messages[index],2)
 end
 -->8
 --game loop
