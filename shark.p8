@@ -46,6 +46,7 @@ function set_mode(name)
   mode=all_modes[name]
   assert(mode!=nil,"undefined mode "..name)
   mode:init()
+  return mode
 end
 
 function default_init(mode)
