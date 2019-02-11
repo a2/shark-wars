@@ -415,7 +415,10 @@ function make_enemy(x,y,c)
         end
       end)
 
-      if (self.damage>self.max_damage) self.finished=true
+      if self.damage>self.max_damage then
+        self.finished=true
+        mode.score+=1
+      end
     end,
     draw=function(self)
       pal(14,self.color)
