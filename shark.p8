@@ -216,6 +216,17 @@ function game_init(mode)
 end
 
 function game_update(mode)
+  foreach_game_object_named("enemy",function(enemy)
+    if enemy.x+enemy.width<0 then
+      mode.shark.health-=1
+      enemy.finished=true
+    end
+  end)
+
+  if mode.shark.health<0 then
+    --game over
+    set_mode("game")
+  end
 end
 
 function game_draw(mode)
