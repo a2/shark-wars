@@ -241,8 +241,8 @@ function game_draw(mode)
 
   --score (l)
   print("score:"..mode.score,1,1,7)
-  --print("t:"..flr(time()-mode.start),1,1,7)
-  --print("fps:"..stat(7),104,1,7)
+  --print("t:"..flr(time()-mode.start),1,122,7)
+  --print("fps:"..stat(7),104,122,7)
 end
 -->8
 --makers
