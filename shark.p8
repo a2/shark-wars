@@ -207,9 +207,9 @@ function game_init(mode)
   mode.start=time()
 
   --create initial objects
-  make_starfield_generator(5,0.01)--1/20, dk gray
-  make_starfield_generator(6,0.05)--1/4, lt gray
-  make_starfield_generator(7,0.1)--1/2, white
+  make_starfield_generator(5,0.01)--1/100, d. gray
+  make_starfield_generator(6,0.05)--1/20, l. gray
+  make_starfield_generator(7,0.1)--1/10, white
   mode.shark=make_shark(8,60)
 
   make_enemy_generator()
