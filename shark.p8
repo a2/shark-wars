@@ -198,7 +198,7 @@ end
 function game_init(mode)
   --gameplay view constraints
   mode.min_y=9
-  mode.max_y=128
+  mode.max_y=120
 
   --start score counter at zero
   mode.score=0
