@@ -416,10 +416,8 @@ function make_enemy_generator()
       local spawn_every=3--derive some formula?
       local duration=now-self.last_spawn
       if duration>spawn_every then
-        --10 to 15 but not 13
-        local c=rndb(10,14)
-        if (c>=13) c+=1
-        make_enemy(128,rndb(mode.min_y,mode.max_y-8),c)
+        local colors={10,11,12,14,15}
+        make_enemy(128,rndb(mode.min_y,mode.max_y-8),colors[rndb(1,#colors)])
         self.last_spawn=now
       end
     end
