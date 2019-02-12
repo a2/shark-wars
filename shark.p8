@@ -329,7 +329,7 @@ function make_laser(x,y)
 end
 
 function make_starfield()
-  local colors={1,2,5,6,7,12}
+  local colors={1,2,5,6,7}
   local warp_factor=3
 
   local i,j
