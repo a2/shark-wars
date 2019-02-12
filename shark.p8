@@ -323,7 +323,7 @@ function make_laser(x,y)
       if (self.x>128) self.finished=true
     end,
     draw=function(self)
-      line(self.x,self.y,self.x+self.width-1,self.y+self.height-1,8)
+      pset(self.x,self.y,8)
     end
   })
 end
