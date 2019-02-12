@@ -208,9 +208,7 @@ function game_init(mode)
   mode.start=time()
 
   --create initial objects
-  make_starfield_generator(5,0.01)--1/100, d. gray
-  make_starfield_generator(6,0.05)--1/20, l. gray
-  make_starfield_generator(7,0.1)--1/10, white
+  make_starfield()
   mode.shark=make_shark(8,60)
 
   make_enemy_generator()
@@ -346,54 +344,42 @@ function make_laser(x,y)
   })
 end
 
-function make_starfield_generator(color,speed)
-  function initial_stars(count)
-    local i
-    local stars={}
-    for i=1,count do
-      add(stars,{x=rndb(0,127),y=rndb(0,127)})
+function make_starfield()
+  local colors={1,2,5,6,7,12}
+  local warp_factor=3
+
+  local i,j
+  local stars={}
+  for i=1,#colors do
+    for j=1,10 do
+      add(stars,{
+        x=rnd(128),
+        y=rnd(128),
+        z=i,
+        c=colors[i]
+      })
     end
-    return stars
   end
 
-  function make_starfield(x,color,speed)
-    return make_game_object("starfield",x,0,-1,{
-      width=128,
-      height=128,
-      stars=initial_stars(10),
-      update=function(self)
-        self.x-=speed
-      end,
-      draw=function(self)
-        local star
-        for star in all(self.stars) do
-          pset(self.x+star.x,self.y+star.y,color)
-        end
-      end
-    })
-  end
-
-  return make_game_object("starfield_generator",0,0,-1,{
-    max=128,
-    starfields={make_starfield(0,color,speed)},
-    visible=false,
+  return make_game_object("starfield",0,0,-1,{
+    width=128,
+    height=128,
+    stars=stars,
     update=function(self)
-      local field
-      local max=0
-      for field in all(self.starfields) do
-        if field.x+field.width<0 then
-          field.finished=true
-        elseif field.x+field.width>max then
-          max=field.x+field.width
+      local s
+      for s in all(self.stars) do
+        s.x-=s.z*warp_factor/10
+        if s.x<0 then
+          s.x=128
+          s.y=rnd(128)
         end
       end
-
-      if max<128 then
-        add(self.starfields,make_starfield(max,color,speed))
-        max+=128
+    end,
+    draw=function(self)
+      local s
+      for s in all(self.stars) do
+        pset(s.x,s.y,s.c)
       end
-
-      self.max=max
     end
   })
 end
