@@ -401,14 +401,11 @@ end
 function make_enemy_generator()
   return make_game_object("enemy_generator",0,0,-1,{
     visible=false,
-    start=time(),
-    last_spawn=-100,
+    last_spawn=0,
     update=function(self)
       local now=time()
-      --local gameplay=now-self.start
-      local spawn_every=3--derive some formula?
       local duration=now-self.last_spawn
-      if duration>spawn_every then
+      if duration>3 then
         local colors={10,11,12,14,15}
         make_enemy(128,rndb(mode.min_y,mode.max_y-8),colors[rndb(1,#colors)])
         self.last_spawn=now
