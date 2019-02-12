@@ -199,7 +199,7 @@ end
 function game_init(mode)
   --gameplay view constraints
   mode.min_y=9
-  mode.max_y=120
+  mode.max_y=127
 
   --start score counter at zero
   mode.score=0
@@ -243,6 +243,7 @@ function game_draw(mode)
   --score (left)
   print("score:"..mode.score,1,1,7)
   --print("fps:"..stat(7),104,122,7)
+  --print("cs:"..shark:charge_speed(),0,122,7)
 
   --laser bar
   local colors={9,10,11}
@@ -292,6 +293,10 @@ function make_shark(x,y)
     charge_max=10,
     health=3,
     health_max=3,
+    charge_speed=function(self)
+      local duration=time()-mode.start
+      return 0.1-0.05*min(1,duration/60)
+    end,
     update=function(self)
       --shoot on 🅾️
       if btn(4) then
@@ -304,7 +309,7 @@ function make_shark(x,y)
         self.last_laser=nil
       end
 
-      self.charge=min(self.charge_max,self.charge+0.05)
+      self.charge=min(self.charge_max,self.charge+self:charge_speed())
       if (btn(2) and self.y>mode.min_y) self.y-=1
       if (btn(3) and self.y+self.height<mode.max_y) self.y+=1
     end,
@@ -407,7 +412,7 @@ function make_enemy_generator()
       local duration=now-self.last_spawn
       if duration>3 then
         local colors={10,11,12,14,15}
-        make_enemy(128,rndb(mode.min_y,mode.max_y-8),colors[rndb(1,#colors)])
+        make_enemy(128,rndb(mode.min_y,mode.max_y-11),colors[rndb(1,#colors)])
         self.last_spawn=now
       end
     end
