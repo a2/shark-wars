@@ -306,26 +306,15 @@ function make_shark(x,y)
         self.last_laser=nil
       end
     end,
-    charge_bar_color=function(self)
-      local percent=self.charge/self.charge_max
-      if percent>0.75 then
-        return 11
-      elseif percent>0.5 then
-        return 10
-      elseif percent>0.25 then
-        return 9
-      else
-        return 8
-      end
-    end,
     draw=function(self)
       palt(0,false)
       palt(1,true)
       spr(0,self.x,self.y)
       palt()
 
+      local colors={9,10,11}
       local percent=self.charge/self.charge_max
-      line(-1,7,flr(percent*129)-1,7,self:charge_bar_color())
+      line(-1,7,flr(percent*129)-1,7,colors[ceil(percent*#colors)])
     end,
   })
 end
