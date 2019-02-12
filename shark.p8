@@ -301,10 +301,10 @@ function make_shark(x,y)
           self.charge-=1
         end
       else
-        self.charge=min(self.charge_max,self.charge+0.1)
         self.last_laser=nil
       end
 
+      self.charge=min(self.charge_max,self.charge+0.05)
       if (btn(2) and self.y>mode.min_y) self.y-=1
       if (btn(3) and self.y+self.height<mode.max_y) self.y+=1
     end,
