@@ -5,9 +5,10 @@ __lua__
 --by a2
 
 function _init()
+  add_mode("menu",menu_init,menu_update,menu_draw)
   add_mode("intro",intro_init,intro_update,intro_draw)
   add_mode("game",game_init,game_update,game_draw)
-  set_mode("intro")
+  set_mode("menu")
 end
 
 function _update()
@@ -60,7 +61,7 @@ end
 
 function default_update(mode)
   --update all game objects
-  foreach_game_object(function(obj,layer)
+  foreach_game_object(function(obj)
     obj:update()
   end)
 
@@ -75,6 +76,43 @@ function default_draw(mode)
   foreach_game_object(function(obj)
     if (obj.visible) obj:draw()
   end)
+end
+-->8
+--menu loop
+function menu_init(mode)
+  mode.title="shark wars"
+  mode.subtitle="BY @a2"
+  mode.index=1
+  mode.options={
+    "play",
+    "backstory",
+    "credits",
+    "highscores",
+  }
+
+  mode.shark=make_small_shark(44,68)
+  make_starfield()
+end
+
+function menu_update(mode)
+  local c=#mode.options
+  if (btnp(2)) mode.index=ternary(mode.index>1,mode.index-1,c)
+  if (btnp(3)) mode.index=ternary(mode.index==c,1,mode.index+1)
+
+  mode.shark.x=44-2*#mode.options[mode.index]
+  mode.shark.y=58+10*mode.index
+end
+
+function menu_draw(mode)
+  local y=40
+  outline(mode.title,64-#mode.title*2,y,0,10)
+  outline(mode.subtitle,64-#mode.subtitle*2,y+10,0,10)
+
+  local i
+  for i=1,#mode.options do
+    local opt=mode.options[i]
+    print(opt,64-#opt*2,y+20+10*i,10)
+  end
 end
 -->8
 --intro loop
@@ -289,10 +327,26 @@ function make_game_object(name,x,y,z,props)
   return obj
 end
 
-function make_shark(x,y)
-  return make_game_object("shark",x,y,0,{
+function make_small_shark(x,y)
+  return make_game_object("small_shark",x,y,0,{
     width=16,
     height=8,
+    frame=0,
+    update=function(self)
+      self.frame=(self.frame+0.5)%8
+    end,
+    draw=function(self)
+      local s=16+2*flr(self.frame)
+      spr(s,self.x,self.y)
+      spr(s+1,self.x+8,self.y)
+    end,
+  })
+end
+
+function make_shark(x,y)
+  return make_game_object("shark",x,y,0,{
+    width=32,
+    height=16,
     charge=10,
     charge_max=10,
     health=3,
@@ -323,7 +377,7 @@ function make_shark(x,y)
     draw=function(self)
       local x=32*flr(self.frame%4)
       local y=ternary(self.frame>=4,32,48)
-      sspr(x,y,32,16,self.x,self.y)
+      sspr(x,y,32,16,self.x,self.y,32*0.8,16*0.75)
     end,
   })
 end
@@ -495,6 +549,18 @@ function filter_out_finished()
   foreach_game_object(function(obj,layer,list)
     if (obj.finished) del(list,obj)
   end)
+end
+
+function outline(txt,x,y,col1,col2)
+  print(txt,x-1,y-1,col2)
+  print(txt,x-1,y,col2)
+  print(txt,x-1,y+1,col2)
+  print(txt,x,y+1,col2)
+  print(txt,x,y-1,col2)
+  print(txt,x+1,y-1,col2)
+  print(txt,x+1,y,col2)
+  print(txt,x+1,y+1,col2)
+  print(txt,x,y,col1)
 end
 __gfx__
 000055e000cccc00499a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
