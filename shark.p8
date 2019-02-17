@@ -24,7 +24,7 @@ game_layers={-1,0,1}
 -->8
 --modes
 function add_mode(name,init,update,draw,skip_default)
-  function wrap(default,custom)
+  local function wrap(default,custom)
     return function(mode)
       if (not skip_default) default(mode)
       custom(mode)
@@ -211,7 +211,7 @@ function intro_draw(mode)
   local line_height=6
 
   --draw message backwards, starting at y
-  function draw_back(message,y,palette)
+  local function draw_back(message,y,palette)
     local i
     for i=#message,1,-1 do
       print(message[i][2],0,y,mode.colors[palette][message[i][1]])
