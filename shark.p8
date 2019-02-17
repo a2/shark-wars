@@ -95,9 +95,14 @@ function menu_init(mode)
 end
 
 function menu_update(mode)
-  local c=#mode.options
-  if (btnp(2)) mode.index=ternary(mode.index>1,mode.index-1,c)
-  if (btnp(3)) mode.index=ternary(mode.index==c,1,mode.index+1)
+  local offset,c=0,#mode.options
+  if btnp(2) then
+    offset=-1
+  elseif btnp(3) then
+    offset=1
+  end
+
+  mode.index=max(1,min(c,mode.index+offset))
 
   mode.shark.x=44-2*#mode.options[mode.index]
   mode.shark.y=58+10*mode.index
