@@ -4,6 +4,8 @@ __lua__
 --shark
 --by a2
 
+cartdata("a2_shark")
+
 function _init()
   add_mode("menu",menu_init,menu_update,menu_draw)
   add_mode("intro",intro_init,intro_update,intro_draw)
@@ -83,18 +85,34 @@ function menu_init(mode)
   mode.title="shark wars"
   mode.subtitle="BY @a2"
   mode.index=1
+  mode.choice=nil
   mode.options={
     "play",
-    "backstory",
     "credits",
     "highscores",
   }
 
-  mode.shark=make_small_shark(44,68)
+  mode.shark=make_menu_shark(44,68)
   make_starfield()
 end
 
 function menu_update(mode)
+  if (btnp(4)) mode.choice=mode.index
+
+  if mode.choice!=nil then
+    mode.shark.x+=4
+
+    if mode.shark.x>140 then
+      if mode.choice==1 then
+        set_mode("intro")
+      else
+        set_mode("menu")
+      end
+    end
+
+    return
+  end
+
   local offset,c=0,#mode.options
   if btnp(2) then
     offset=-1
@@ -103,21 +121,21 @@ function menu_update(mode)
   end
 
   mode.index=max(1,min(c,mode.index+offset))
-
-  mode.shark.x=44-2*#mode.options[mode.index]
+  mode.shark.x=hcenter(mode.options[mode.index])-20
   mode.shark.y=58+10*mode.index
 end
 
 function menu_draw(mode)
   local y=40
-  outline(mode.title,64-#mode.title*2,y,0,10)
-  outline(mode.subtitle,64-#mode.subtitle*2,y+10,0,10)
+  outline(mode.title,hcenter(mode.title),y,0,10)
+  outline(mode.subtitle,hcenter(mode.subtitle),y+10,0,10)
 
   local i
   for i=1,#mode.options do
     local opt=mode.options[i]
-    local clr=10--ternary(i==2,6,10)
-    print(opt,64-#opt*2,y+20+10*i,clr)
+    if mode.choice!=i then
+      outline(opt,hcenter(opt),y+20+10*i,10,0)
+    end
   end
 end
 -->8
@@ -333,7 +351,7 @@ function make_game_object(name,x,y,z,props)
   return obj
 end
 
-function make_small_shark(x,y)
+function make_menu_shark(x,y)
   return make_game_object("small_shark",x,y,0,{
     width=16,
     height=8,
@@ -349,23 +367,33 @@ end
 
 function make_shark(x,y)
   return make_game_object("shark",x,y,0,{
-    width=32,
-    height=16,
+    width=16,--32
+    height=8,--16
     charge=10,
     charge_max=10,
     health=3,
     health_max=3,
     frame=0,
+    big=false,
     charge_speed=function(self)
       local duration=time()-mode.start
       return 0.1-0.05*min(1,duration/60)
+    end,
+    mouth_position=function(self)
+      if self.big then
+        return self.x+30,self.y+9
+      else
+        return self.x+14,self.y+5
+      end
     end,
     update=function(self)
       --shoot on 🅾️
       if btn(4) then
         if self.charge>0 and self.last_laser==nil then
           sfx(1)
-          self.last_laser=make_laser(self.x+30,self.y+9)
+
+          local mx,my=self:mouth_position()
+          self.last_laser=make_laser(mx,my)
           self.charge-=1
         end
       else
@@ -379,10 +407,14 @@ function make_shark(x,y)
       self.frame=(self.frame+0.5)%8
     end,
     draw=function(self)
-      local offset=2*flr(self.frame%8)
-      local chomp_offset_y=ternary(chomp,32,0)
-      spr(128+offset,self.x,self.y,2,2)
-      spr(64+offset,self.x+16,self.y,2,2)
+      if self.big then
+        local offset=2*flr(self.frame%8)
+        --local chomp_offset_y=ternary(chomp,32,0)
+        spr(128+offset,self.x,self.y,2,2)
+        spr(64+offset,self.x+16,self.y,2,2)
+      else
+        spr(16+2*flr(self.frame),self.x,self.y,2,1)
+      end
     end,
   })
 end
@@ -554,6 +586,10 @@ function filter_out_finished()
   foreach_game_object(function(obj,layer,list)
     if (obj.finished) del(list,obj)
   end)
+end
+
+function hcenter(str)
+  return 64-#str*2
 end
 
 function outline(txt,x,y,col1,col2)
