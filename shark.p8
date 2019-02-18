@@ -556,8 +556,10 @@ function make_enemy_generator()
     last_spawn=0,
     update=function(self)
       local now=time()
+      local game_time=now-mode.start
+      local spawn_interval=4-min(3,game_time/60)
       local duration=now-self.last_spawn
-      if duration>3 then
+      if duration>spawn_interval then
         make_enemy(128,rndb(mode.min_y,mode.max_y-11))
         self.last_spawn=now
       end
