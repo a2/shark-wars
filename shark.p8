@@ -303,9 +303,8 @@ function game_init(mode)
 
   --create initial objects
   make_starfield()
-  mode.shark=make_shark(0,60)
-
   make_enemy_generator()
+  mode.shark=make_shark(0,60)
 end
 
 function game_update(mode)
