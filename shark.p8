@@ -111,13 +111,14 @@ function menu_update(mode)
     return
   end
 
-  local offset,c=0,#mode.options
+  local offset=0
   if btnp(2) then
     offset=-1
   elseif btnp(3) then
     offset=1
   end
 
+  local c=#mode.options
   mode.index=max(1,min(c,mode.index+offset))
   mode.shark.x=hcenter(mode.options[mode.index])-20
   mode.shark.y=63+10*mode.index
@@ -137,7 +138,8 @@ function menu_draw(mode)
     sspr(32,16,16,13,77+i,y+17+j)--s
   end
 
-  local y,i,j=23
+  local i,j
+  local y=23
 
   pal(10,0)
   for i=-1,1 do
