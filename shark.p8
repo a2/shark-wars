@@ -336,12 +336,6 @@ function game_draw(mode)
   --score (left)
   print("score:"..mode.score,1,1,7)
   --print("fps:"..stat(7),104,122,7)
-  --print("cs:"..shark:charge_speed(),0,122,7)
-
-  --laser charge bar (top center)
-  local colors={9,10,11}
-  local percent=shark.charge/shark.charge_max
-  line(-1,7,flr(percent*129)-1,7,colors[ceil(percent*#colors)])
 end
 -->8
 --makers
@@ -396,16 +390,10 @@ function make_shark(x,y)
   return make_game_object("shark",x,y,0,{
     width=16,--32
     height=8,--16
-    charge=10,
-    charge_max=10,
     health=3,
     health_max=3,
     frame=0,
     big=false,
-    charge_speed=function(self)
-      local duration=time()-mode.start
-      return 0.1-0.05*min(1,duration/60)
-    end,
     mouth_position=function(self)
       if self.big then
         return self.x+30,self.y+9
@@ -416,18 +404,16 @@ function make_shark(x,y)
     update=function(self)
       --shoot on 🅾️
       if btn(4) then
-        if self.charge>0 and self.last_laser==nil then
+        if self.last_laser==nil then
           sfx(1)
 
           local mx,my=self:mouth_position()
           self.last_laser=make_laser(mx,my)
-          self.charge-=1
         end
       else
         self.last_laser=nil
       end
 
-      self.charge=min(self.charge_max,self.charge+self:charge_speed())
       if (btn(2) and self.y>mode.min_y) self.y-=1
       if (btn(3) and self.y+self.height<mode.max_y) self.y+=1
 
