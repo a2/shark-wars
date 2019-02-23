@@ -82,6 +82,8 @@ end
 -->8
 --menu loop
 function menu_init(mode)
+  music(0)
+
   mode.index=1
   mode.choice=nil
   mode.options={
@@ -169,7 +171,7 @@ end
 -->8
 --intro loop
 function intro_init(mode)
-  music(0)
+  music(-1)
 
   mode.colors={
     {5,5},--inactive
