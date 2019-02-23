@@ -128,9 +128,9 @@ function menu_draw(mode)
   local function do_draw(y,i,j)
     --shark
     sspr(41,0,16,13,30+i,y+j)--s
-    sspr(57,0,12,13,46+i,y+j)--h
-    sspr(100,0,28,13,58+i,y+j)--ar
-    sspr(65,0,15,13,86+i,y+j)--k
+    sspr(57,0,12,13,45+i,y+j)--h
+    sspr(100,0,28,13,57+i,y+j)--ar
+    sspr(65,0,15,13,85+i,y+j)--k
 
     --wars
     sspr(80,0,20,13,36+i,y+17+j)--w
