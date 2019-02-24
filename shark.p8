@@ -590,7 +590,7 @@ function make_enemy(x,y)
         self.finished=true
         mode.score+=1
 
-        if mode.shark.powerup==nil and rndb(1,6)==1 then
+        if mode.shark.powerup==nil and rndb(1,3)==1 then
           make_powerup_random(self.x,self.y)
         end
       end
