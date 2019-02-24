@@ -303,8 +303,8 @@ function game_init(mode)
   mode.min_y=9
   mode.max_y=127
 
-  --start score counter at zero
-  mode.score=0
+  --start score counter at 10
+  mode.score=10
 
   --store current time
   mode.tick=0
