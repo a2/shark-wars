@@ -713,7 +713,23 @@ function filter_out_finished()
 end
 
 function hcenter(str)
-  return 64-#str*2
+  local specials={"⬆️","⬇️","➡️","⬅️","❎","🅾️"}
+
+  local result=64-#str*2
+  local i
+  for i=1,#str do
+    local substr=sub(str,i,1)
+
+    local special
+    for special in all(specials) do
+      if substr==special then
+        result-=2
+        break
+      end
+    end
+  end
+
+  return result
 end
 
 function outline(txt,x,y,col1,col2)
