@@ -97,7 +97,7 @@ function menu_init(mode)
 end
 
 function menu_update(mode)
-  if btnp(4) then
+  if btnp(5) then
     sfx(2)
     mode.choice=mode.index
   end
@@ -185,7 +185,7 @@ function intro_init(mode)
     {
       {1,"[nasa says]"},
       {2,"we have received a message"},
-      {2,"from the aliens on enceladus"},
+      {2,"from the aliens on enceladus,"},
       {2,"the moon of saturn."},
       {1,""},
       {1,"⬆️⬇️ navigate - ❎ skip intro"},
@@ -240,17 +240,19 @@ function intro_init(mode)
       {2,"good luck, shark x."},
     },
     {
-      {1,"press 🅾️ to start"},
+      {1,"press ❎ to start"},
     },
   }
 end
 
 function intro_update(mode)
-  if btnp(4) and mode.index==#mode.messages then
-    set_mode("game")
-  elseif btnp(5) then
-    sfx(5)
-    mode.index=#mode.messages
+  if btnp(5) then
+    if mode.index==#mode.messages then
+      set_mode("game")
+    else
+      sfx(5)
+      mode.index=#mode.messages
+    end
   elseif btnp(2) and mode.index>1 then
     sfx(5)
     mode.index-=1
@@ -453,8 +455,8 @@ function make_shark(x,y)
         self.width=16
         self.height=8
 
-        --shoot on 🅾️
-        if btn(4) then
+        --shoot on ❎
+        if btn(5) then
           if self.last_laser==nil then
             sfx(1)
 
