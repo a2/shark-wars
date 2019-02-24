@@ -10,6 +10,7 @@ function _init()
   add_mode("menu",menu_init,menu_update,menu_draw)
   add_mode("intro",intro_init,intro_update,intro_draw)
   add_mode("game",game_init,game_update,game_draw)
+  add_mode("gameover",gameover_init,gameover_update,gameover_draw)
   set_mode("menu")
 end
 
@@ -87,9 +88,8 @@ function menu_init(mode)
   mode.index=1
   mode.choice=nil
   mode.options={
-    "play",
-    "credits",
-    "highscores",
+    "start game",
+    "how to play",
   }
 
   mode.shark=make_menu_shark(36,73)
@@ -97,20 +97,21 @@ function menu_init(mode)
 end
 
 function menu_update(mode)
-  if btnp(5) then
-    sfx(2)
-    mode.choice=mode.index
+  if btnp(4) or btnp(5) then
+    if mode.choice==nil then
+      sfx(2)
+      mode.choice=mode.index
+    elseif mode.choice!=1 then
+      mode.choice=nil
+    end
   end
 
   if mode.choice!=nil then
-    mode.shark.x+=4
-
-    if mode.shark.x>140 then
-      if mode.choice==1 then
-        set_mode("intro")
-      else
-        set_mode("menu")
-      end
+    if mode.shark.x<140 then
+      mode.shark.x+=4
+    elseif mode.choice==1 then
+      --play
+      set_mode("intro")
     end
 
     return
@@ -162,13 +163,30 @@ function menu_draw(mode)
   y+=8
 
   y+=10
-  local i
-  for i=1,#mode.options do
-    local opt=mode.options[i]
-    if mode.choice!=i then
-      outline(opt,hcenter(opt),y,10,0)
+  if mode.choice!=nil and mode.shark.x>=140 then
+    if mode.choice==2 then
+      --contols
+      local texts,text={
+        "use ❎ to shoot ufoS",
+        "⬆️⬇️ to move the shark",
+        "",
+        "collect power-ups and",
+        "don't let the ufoS past you"
+      }
+      for text in all(texts) do
+        outline(text,hcenter(text),y,7,5)
+        y+=8
+      end
     end
-    y+=10
+  else
+    local i
+    for i=1,#mode.options do
+      local opt=mode.options[i]
+      if mode.choice!=i then
+        outline(opt,hcenter(opt),y,7,5)
+      end
+      y+=10
+    end
   end
 end
 -->8
@@ -185,8 +203,8 @@ function intro_init(mode)
     {
       {1,"[nasa says]"},
       {2,"we have received a message"},
-      {2,"from the aliens on enceladus,"},
-      {2,"the moon of saturn."},
+      {2,"from the aliens that live on"},
+      {2,"the moons of saturn."},
       {1,""},
       {1,"⬆️⬇️ navigate - ❎ skip intro"},
     },
@@ -350,7 +368,9 @@ function game_update(mode)
 
   if shark.health<0 or mode.score<0 then
     sfx(2)
-    set_mode("game")
+    new_mode=set_mode("gameover")
+    new_mode.sec=mode.sec
+    new_mode.score=mode.score+ternary(mode.score<0,10,0)
   end
 end
 
@@ -381,6 +401,31 @@ function game_draw(mode)
 
     line(0,7,128*(shark.powerup_timer/shark.powerup_duration),7,14)
   end
+end
+-->8
+--gameover loop
+function gameover_init(mode)
+  music(1)
+end
+
+function gameover_update(mode)
+  if btnp(4) or btnp(5) then
+    set_mode("menu")
+  end
+end
+
+function gameover_draw(mode)
+  local text="game over"
+  print(text,hcenter(text),30,10)
+
+  text="you scored "..ternary(mode.score!=nil,max(0,mode.score),0).."PT"
+  print(text,hcenter(text),50,6)
+
+  text="and defended the"
+  print(text,hcenter(text),70,6)
+
+  text="galaxy for "..(mode.sec or 0).." sec"
+  print(text,hcenter(text),80,6)
 end
 -->8
 --makers
